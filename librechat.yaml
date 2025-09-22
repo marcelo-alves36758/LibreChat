@@ -96,51 +96,52 @@ ocr:
   baseURL: "${OCR_BASEURL}"
   strategy: "azure_mistral_ocr"
 
+openAI:
+  title: "OpenAI"
+  apiKey: "${OPENAI_API_KEY}"
+  titleModel: "gpt-5-nano"
+  models:
+    "gpt-5": {}
+    "gpt-5-mini": {}
+    "gpt-5-nano": {}
+
 # ========================
 # Endpoints (Global Tool Config)
 # ========================
 endpoints:
-  openAI:
-    title: "OpenAI"
-    apiKey: "${OPENAI_API_KEY}"
-    titleModel: "gpt-5-nano"
-    models:
-      "gpt-5": {}
-      "gpt-5-mini": {}
-      "gpt-5-nano": {}
-agents:
-    disableBuilder: false
-    recursionLimit: 50
-    maxRecursionLimit: 100
-    maxCitations: 30
-    maxCitationsPerFile: 7
-    minRelevanceScore: 0.45
-    tools:
-      order:
-        - web_search
-        - actions
-        - file_search
-        - ocr
-        - execute_code
-        - image_generation
-        - artifacts
-        - chain
-      web_search:
-        providerPriority: [serper, tavily, traversaal]
-        firecrawl: true # <-- Apenas diz que a ferramenta está ATIVA
-        reranker:
-          enabled: true # <-- Apenas diz que o reranker está ATIVO
-          providerPriority: [jina] # <-- CORREÇÃO: "jina" deve estar sem aspas e providerPriority é uma lista
-          topN: 8
-        maxResults: 16
-      ocr:
-        enabled: true
-      execute_code:
-        enabled: true
-      image_generation:
-        providers:
-          - openai_images
-          - dalle
+  agents:
+      disableBuilder: false
+      recursionLimit: 50
+      maxRecursionLimit: 100
+      maxCitations: 30
+      maxCitationsPerFile: 7
+      minRelevanceScore: 0.45
+      tools:
+        order:
+          - web_search
+          - actions
+          - file_search
+          - ocr
+          - execute_code
+          - image_generation
+          - artifacts
+          - chain
+        web_search:
+          providerPriority: [serper, tavily, traversaal]
+          firecrawl: true # <-- Apenas diz que a ferramenta está ATIVA
+          reranker:
+            enabled: true # <-- Apenas diz que o reranker está ATIVO
+            providerPriority: [jina] # <-- CORREÇÃO: "jina" deve estar sem aspas e providerPriority é uma lista
+            topN: 8
+          maxResults: 16
+        ocr:
+          enabled: true
+        execute_code:
+          enabled: true
+        image_generation:
+          providers:
+            - openai_images
+            - dalle
 
 # ===================================================================
 # ARQUIVO DE CONFIGURAÇÃO FINAL (Desativado por padrão)
