@@ -38,15 +38,6 @@ memory:
 # fileStrategy: "azure_blob"
 fileStrategy: "local"
 
-# ========================
-# Auth / Registration
-# ========================
-registration:
-  socialLogins: ["openid"]
-  allowedDomains:
-    - "erobr.com"
-    - "erocopper.com"
-    - "ero.com"
 
 # ================================
 # INTERFACE (UI) - Otimizada
