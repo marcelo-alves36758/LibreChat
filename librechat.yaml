@@ -96,9 +96,11 @@ endpoints:
     disableBuilder: false
     recursionLimit: 50
     maxRecursionLimit: 100
-    maxCitations: 200
-    maxCitationsPerFile: 200
-    minRelevanceScore: 0.12    
+    # 🔧 Zod impõe limites: ≤ 50 e ≤ 10
+    maxCitations: 50            # antes 200 (causava erro)
+    maxCitationsPerFile: 10     # antes 200 (causava erro)
+    # mantém recall alto
+    minRelevanceScore: 0.12
     tools:
       order:
         - web_search
@@ -121,8 +123,8 @@ endpoints:
         enabled: true
         minRelevanceScore: 0.12
         k: 120
-        maxCitations: 200
-        maxCitationsPerFile: 200
+        maxCitations: 50
+        maxCitationsPerFile: 10
       ocr:
         enabled: true
       execute_code:
