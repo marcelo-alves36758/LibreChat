@@ -13,7 +13,7 @@ memory:
   messageWindowSize: 10
   agent:
     provider: "openai"
-    model: "gpt-4o-mini"
+    model: "gpt-5-nano"
     instructions: |
       You are the Hero Memory Manager for Ero Copper.
       Your job is to extract, normalize, and update user memory succinctly and safely. 
