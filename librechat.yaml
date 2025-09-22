@@ -70,8 +70,8 @@ interface:
   fileSearch: true
   runCode: true
   hideEndpoints:
-    - openai
-    - azureopenai
+    - openAI
+    - azureOpenAI
     - custom
 
 # ================================
