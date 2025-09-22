@@ -70,11 +70,8 @@ interface:
   fileSearch: true
   runCode: true
   hideEndpoints:
-    - openAI
-    - azureOpenAI
-    - anthropic
-    - google
-    - assistants
+    - openai
+    - azureopenai
     - custom
 
 # ================================
@@ -99,6 +96,8 @@ ocr:
   baseURL: "${OCR_BASEURL}"
   strategy: "azure_mistral_ocr"
 
+
+
 # ========================
 # Endpoints (Global Tool Config)
 # ========================
@@ -112,7 +111,10 @@ endpoints:
       "gpt-5": {}
       "gpt-5-mini": {}
       "gpt-5-nano": {}
-  agents:
+# ========================
+# Agents (Global Tool Config)
+# ========================
+agents:
     disableBuilder: false
     recursionLimit: 50
     maxRecursionLimit: 100
@@ -145,6 +147,7 @@ endpoints:
         providers:
           - openai_images
           - dalle
+
 # ===================================================================
 # ARQUIVO DE CONFIGURAÇÃO FINAL (Desativado por padrão)
 # ===================================================================
@@ -237,7 +240,6 @@ modelSpecs:
     - name: "hero"
       label: "Hero"
       default: true
-      iconURL: ""
       description: "The most comum agent for internal activities"
       showIconInMenu: true
       showIconInHeader: true
@@ -247,7 +249,6 @@ modelSpecs:
 
     - name: "hero-deep-research"
       label: "Hero Deep Research"
-      iconURL: ""
       description: "The most complex agent for research activities"
       showIconInMenu: true
       showIconInHeader: true
@@ -257,7 +258,6 @@ modelSpecs:
 
     - name: "hero-prompt-trainer"
       label: "Hero Prompt Trainer"
-      iconURL: ""
       description: "Playground Agent for supporint on how to use Generative AI"
       showIconInMenu: true
       showIconInHeader: true
@@ -308,14 +308,12 @@ speech:
     advancedMode: false
     speechToText:
       engineSTT: "external"
-      languageSTT: "English (US)"
       autoTranscribeAudio: true
       decibelValue: -45
       autoSendText: 0
     textToSpeech:
       engineTTS: "external"
       voice: "alloy"
-      languageTTS: "en"
       automaticPlayback: true
       playbackRate: 1.0
       cacheTTS: true
