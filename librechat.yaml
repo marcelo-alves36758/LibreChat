@@ -92,12 +92,6 @@ ocr:
 # Endpoints (Global Tool Config)
 # ========================
 endpoints:
-  openai:
-    apiKey: ${OPENAI_API_KEY}
-    models:
-      - id: gpt-5
-        name: GPT-5
-        hidden: true
   agents:
     disableBuilder: false
     recursionLimit: 50
