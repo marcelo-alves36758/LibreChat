@@ -19,9 +19,6 @@ WORKDIR /app
 
 USER node
 
-# (opcional) crie a pasta de uploads/storage local
-RUN mkdir -p /app/storage /app/uploads
-
 COPY --chown=node:node package.json package-lock.json ./
 COPY --chown=node:node api/package.json ./api/package.json
 COPY --chown=node:node client/package.json ./client/package.json
