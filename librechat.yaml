@@ -99,7 +99,7 @@ speech:
       automaticPlayback: true
       cacheTTS: true
       engineTTS: external
-      voice: alloy
+      voice:  ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer']
   stt:
     openai:
       apiKey: '${STT_API_KEY}'
