@@ -184,9 +184,11 @@ endpoints:
       web_search:
         providerPriority: [serper, tavily, traversaal]
         firecrawl: true
+        firecrawlApiKey: "${FIRECRAWL_API_KEY}"
         reranker:
           enabled: true
-          providerPriority: [jina, cohere]
+          jinaApiKey: "${JINA_API_KEY}"
+          providerPriority: "jina"
           topN: 8
         maxResults: 16
       ocr:
