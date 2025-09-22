@@ -1,5 +1,8 @@
 version: 1.2.9
 cache: true
+
+# ================================
+# Memory
 # ================================
 memory:
   disabled: false
@@ -25,7 +28,7 @@ memory:
       temperature: 0.1
 
 # ================================
-# ROOT / STORAGE
+# Storage
 # ================================
 fileStrategy: "local"
 
@@ -36,17 +39,17 @@ registration:
   socialLogins: []
 
 # ================================
-# INTERFACE (UI)
+# INTERFACE (UI) - Otimizada
 # ================================
 interface:
-  title: "Hero" # CORRIGIDO: O título foi movido para dentro da interface
+  title: 'Hero'
   customWelcome: "Welcome to Hero! An Ero assisted intelligence model"
   mcpServers:
     placeholder: "MCP Servers"
-  modelSelect: true
-  agents: true
+  modelSelect: false
+  agents: false
   sidePanel: true
-  parameters: true
+  parameters: false
   presets: false
   prompts: true
   bookmarks: true
@@ -76,7 +79,7 @@ rateLimits:
   imageGeneration: { ipMax: 60, ipWindowInMinutes: 60, userMax: 30, userWindowInMinutes: 60 }
 
 # ================================
-# SPEECH (STT/TTS) — OpenAI
+# SPEECH (STT/TTS)
 # ================================
 speech:
   speechTab:
@@ -97,7 +100,7 @@ speech:
       voices: ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer']
 
 # ================================
-# OCR — Mistral
+# OCR
 # ================================
 ocr:
   strategy: "mistral_ocr"
@@ -105,7 +108,7 @@ ocr:
   baseURL: "${OCR_BASEURL}"
 
 # ========================
-# Endpoints
+# Endpoints (Global Tool Config)
 # ========================
 endpoints:
   agents:
@@ -141,7 +144,7 @@ endpoints:
           - dalle
 
 # ========================
-# Catálogo “Modelos” = Agentes
+# Model Catalog (Agent List)
 # ========================
 modelSpecs:
   enforce: true
@@ -167,7 +170,7 @@ modelSpecs:
         agent_id: "agent_giLGsVCYY18fvw_Wh9rLz"
 
 # ================================
-# FILE UPLOAD CONFIGURATION
+# File Upload Configuration
 # ================================
 fileConfig:
   endpoints:
