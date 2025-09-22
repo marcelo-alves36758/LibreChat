@@ -159,6 +159,7 @@ endpoints:
   openai:
    title: "OpenAI"
    apiKey: "${OPENAI_API_KEY}"
+   titleModel: "gpt-5-nano"
 #     # Lista de modelos GPT-5 disponíveis para agentes
    models:
      - "gpt-5"      # Para: Raciocínio complexo, conhecimento amplo e tarefas de agente com código.
