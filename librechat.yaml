@@ -96,9 +96,9 @@ endpoints:
     disableBuilder: false
     recursionLimit: 50
     maxRecursionLimit: 100
-    maxCitations: 30
-    maxCitationsPerFile: 7
-    minRelevanceScore: 0.45
+    maxCitations: 200
+    maxCitationsPerFile: 200
+    minRelevanceScore: 0.12    
     tools:
       order:
         - web_search
@@ -117,6 +117,12 @@ endpoints:
           providerPriority: [jina] # <-- CORREÇÃO: "jina" deve estar sem aspas e providerPriority é uma lista
           topN: 8
         maxResults: 16
+      file_search:
+        enabled: true
+        minRelevanceScore: 0.12
+        k: 120
+        maxCitations: 200
+        maxCitationsPerFile: 200
       ocr:
         enabled: true
       execute_code:
