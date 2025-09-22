@@ -1,7 +1,6 @@
 version: 1.2.9
 cache: true
 
-
 # --- Seção da API Padrão da OpenAI (CORRIGIDO: Movido para o nível superior) ---
 openAI:
   title: "OpenAI"
@@ -105,87 +104,68 @@ rateLimits:
 # OPENAI/AZURE SPEECH (STT/TTS) - VERSÃO COMPLETA
 # ================================
 speech:
-  # --- Configurações da Interface (UI) ---
-  # Habilita a aba de "Voz" na interface.
-  speechTab: true
-  # Ativa o modo de conversação contínua (o microfone continua ouvindo).
-  conversationMode: true
-  # Mostra opções avançadas de microfone na interface (ex: ajuste de sensibilidade).
-  advancedMode: true
-
-  # --- Configurações Gerais de Text-to-Speech (TTS) ---
-  # Toca o áudio da resposta automaticamente.
-  automaticPlayback: true
-  # Velocidade da fala (1.0 = normal, 1.2 = 20% mais rápido, etc.).
-  playbackRate: 1.0
-  # Armazena em cache o áudio gerado para economizar chamadas de API em textos repetidos.
-  cacheTTS: true
-
-  # --- Configurações de Speech-to-Text (STT/Whisper) ---
-  stt:
-    # Transcreve automaticamente o áudio detectado.
-    autoTranscribeAudio: true
-    # Nível de decibéis para o microfone começar a capturar. Valores mais baixos (ex: -60) são mais sensíveis.
-    decibelValue: -45
-    # Segundos de silêncio antes de enviar o texto automaticamente para o chat (0 = desativado).
-    autoSendText: 2
+  # --- Controles da Interface do Usuário (UI) ---
+  # Esta seção controla o que o usuário vê e como a aba de voz se comporta.
+  speechTab:
+    conversationMode: true
+    advancedMode: true
     
-    # Provedor ativo para STT (Whisper)
+    # Configurações da UI para Speech-to-Text (Voz para Texto)
+    speechToText:
+      # Define qual provedor de backend será usado para STT.
+      # Deve corresponder a uma chave em "stt" abaixo (ex: "openai").
+      engineSTT: "openai"
+      # Idioma padrão selecionado na UI.
+      languageSTT: "pt-BR"
+      autoTranscribeAudio: true
+      decibelValue: -45
+      autoSendText: 2
+      
+    # Configurações da UI para Text-to-Speech (Texto para Voz)
+    textToSpeech:
+      # Define qual provedor de backend será usado para TTS.
+      # Deve corresponder a uma chave em "tts" abaixo (ex: "openai").
+      engineTTS: "openai"
+      # Voz padrão selecionada na UI.
+      voice: "onyx"
+      # Idioma padrão selecionado na UI.
+      languageTTS: "pt"
+      automaticPlayback: true
+      playbackRate: 1.0
+      cacheTTS: true
+
+  # --- Configuração dos Provedores (Backend) ---
+  # Esta seção define as credenciais e modelos para cada serviço.
+  
+  # Provedores de Speech-to-Text
+  stt:
+    # Provedor ATIVO: OpenAI
     openai:
       apiKey: '${STT_API_KEY}'
       model: 'whisper-1'
-      # (Opcional) Você pode especificar o idioma para melhorar a precisão da transcrição.
-      # language: 'pt'
-
-  # --- Configurações de Text-to-Speech (TTS) ---
-  tts:
-    # Define qual provedor usar. Deve corresponder a uma das seções abaixo ("openai" ou "azureOpenAI").
-    engine: openai
-    # Voz padrão para a interface. "onyx", "echo", e "fable" são vozes masculinas.
-    voice: "onyx" # <-- ALTERADO
-
-    # Provedor ATIVO para TTS
-    openai:
-      apiKey: '${TTS_API_KEY}'
-      model: 'tts-1'
-      # (Opcional) Você pode especificar o idioma para a síntese de voz.
-      # language: 'pt'
-      # Lista de vozes que aparecerão no menu de seleção da interface.
-      voices: ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer']
-
-# ================================
-# OPENAI/AZURE SPEECH (STT/TTS)
-# ================================
-#speech:
-#  speechTab:
-#    conversationMode: true
-#    textToSpeech:
-#      automaticPlayback: true
-#      cacheTTS: true
-#      engineTTS: openai
-#      voice: alloy
-#
-#  # --- Configuração de Speech-to-Text (STT/Whisper) ---
-#  stt:
-    # ATIVO: Usando a API padrão da OpenAI para transcrição.
-    # INATIVO: Configuração do Azure para uso futuro.
+    # Provedor INATIVO: Azure
     # azureOpenAI:
     #   apiKey: '${AZURE_OPENAI_API_KEY}'
     #   apiVersion: '${AZURE_OPENAI_STT_API_VERSION}'
     #   deploymentName: '${AZURE_OPENAI_STT_DEPLOYMENT}'
     #   instanceName: '${AZURE_OPENAI_INSTANCE_NAME}'
-  # --- Configuração de Text-to-Speech (TTS) ---
-  #tts:
-    # INATIVO: Configuração do Azure para uso futuro, com a nova estrutura.
+
+  # Provedores de Text-to-Speech
+  tts:
+    # Provedor ATIVO: OpenAI
+    openai:
+      apiKey: '${TTS_API_KEY}'
+      model: 'tts-1'
+      # Lista de vozes que a UI poderá selecionar para este provedor.
+      voices: ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer']
+    # Provedor INATIVO: Azure
     # azureOpenAI:
     #   instanceName: '${AZURE_OPENAI_INSTANCE_NAME}'
     #   apiKey: '${AZURE_TTS_API_KEY}'
     #   deploymentName: '${AZURE_OPENAI_TTS_DEPLOYMENT}'
     #   apiVersion: '${AZURE_OPENAI_TTS_API_VERSION}'
     #   model: 'tts-1'
-    #   voices: ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer']
-
-
+    #   voices: ['alloy', 'nova', 'onyx', 'shimmer']
 # ================================
 # OCR
 # ================================
