@@ -81,11 +81,11 @@ rateLimits:
 # ================================
 # OCR
 # ================================
-ocr:
-  mistralModel: "${OCR_DEPLOYMENT_NAME}" 
-  apiKey: "${OCR_API_KEY}"
-  baseURL: "${OCR_BASEURL}"
-  strategy: "azure_mistral_ocr"
+#ocr:
+#  mistralModel: "${OCR_DEPLOYMENT_NAME}" 
+#  apiKey: "${OCR_API_KEY}"
+#  baseURL: "${OCR_BASEURL}"
+#  strategy: "azure_mistral_ocr"
 
 
 # ========================
