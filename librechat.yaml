@@ -28,6 +28,16 @@ memory:
     model_parameters:
       temperature: 0.1
 
+# --- Seção da API Padrão da OpenAI (CORRIGIDO: Movido para o nível superior) ---
+openAI:
+  title: "OpenAI"
+  apiKey: "${OPENAI_API_KEY}"
+  titleModel: "gpt-5-nano"
+  models:
+    "gpt-5": {}
+    "gpt-5-mini": {}
+    "gpt-5-nano": {}
+
 # ================================
 # Storage
 # ================================
@@ -187,14 +197,6 @@ ocr:
 # Endpoints (Global Tool Config)
 # ========================
 endpoints:
-  openai:
-   title: "OpenAI"
-   apiKey: "${OPENAI_API_KEY}"
-   titleModel: "gpt-5-nano"
-   models:
-      "gpt-5": {}
-      "gpt-5-mini": {}
-      "gpt-5-nano": {}
   agents:
     disableBuilder: false
     recursionLimit: 50
