@@ -1,0 +1,235 @@
+version: 1.2.9
+cache: true
+
+# ================================
+# ROOT / STORAGE
+# ================================
+fileStrategy: "local"  # requer envs do Azure Storage (account/container/conn string)
+
+# ========================
+# Auth / Registration
+# ========================
+registration:
+  socialLogins: []   # login social desativado
+  # login/cadastro por e-mail → configurar no .env:
+  # ALLOW_EMAIL_LOGIN=true
+  # ALLOW_REGISTRATION=true
+  # ALLOW_SOCIAL_REGISTRATION=false
+
+# ================================
+# INTERFACE (UI)
+# ================================
+interface:
+  # Mensagem de boas-vindas e MCP
+  customWelcome: "Welcome to Hero! An Ero assisted intelligence model"
+  mcpServers:
+    placeholder: "MCP Servers"
+
+  # Botões/áreas da UI
+  modelSelect: true
+  agents: true         # catálogo habilitado
+  sidePanel: true
+  parameters: true
+  presets: false       # presets desativados
+  prompts: true
+  bookmarks: true
+  multiConvo: true
+
+  # Botões de topo
+  webSearch: true
+  fileSearch: true     # mostra o botão (capability segue controlada nos agentes)
+  runCode: true
+
+  # Esconder endpoints legados do menu
+  hideEndpoints:
+    - openAI
+    - azureOpenAI
+    - anthropic
+    - google
+    - assistants
+    - custom
+
+# ================================
+# RATE LIMITS
+# ================================
+rateLimits:
+  fileUploads: { ipMax: 120, ipWindowInMinutes: 60, userMax: 60, userWindowInMinutes: 60 }
+  conversationsImport: { ipMax: 30, ipWindowInMinutes: 60, userMax: 20, userWindowInMinutes: 60 }
+  stt: { ipMax: 120, ipWindowInMinutes: 10, userMax: 60, userWindowInMinutes: 10, maxSecondsPerRequest: 180 }
+  tts: { ipMax: 120, ipWindowInMinutes: 10, userMax: 60, userWindowInMinutes: 10, maxCharsPerRequest: 1200 }
+  webSearch: { ipMax: 100, ipWindowInMinutes: 15, userMax: 40, userWindowInMinutes: 15 }
+  actions: { ipMax: 200, ipWindowInMinutes: 60, userMax: 100, userWindowInMinutes: 60 }
+  codeInterpreter: { ipMax: 60, ipWindowInMinutes: 60, userMax: 30, userWindowInMinutes: 60, maxTimeoutSeconds: 60 }
+  imageGeneration: { ipMax: 60, ipWindowInMinutes: 60, userMax: 30, userWindowInMinutes: 60 }
+
+# ================================
+# SPEECH (STT/TTS) — OpenAI
+# ================================
+speech:
+  speechTab:
+    conversationMode: true
+    textToSpeech:
+      automaticPlayback: true
+      cacheTTS: true
+      engineTTS: external
+      voice: alloy
+
+  stt:
+    openai:
+      apiKey: '${STT_API_KEY}'
+      model: 'whisper-1'
+
+  tts:
+    openai:
+      apiKey: '${TTS_API_KEY}'
+      model: 'tts-1'
+      voices: ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer']
+
+# ================================
+# OCR — Mistral
+# ================================
+ocr:
+  strategy: "mistral_ocr"
+  apiKey: "${OCR_API_KEY}"
+  baseURL: "${OCR_BASEURL}"
+
+# ========================
+# Endpoints
+# ========================
+endpoints:
+  agents:
+    disableBuilder: true    # só admins via UI/admin podem mexer
+    recursionLimit: 50
+    maxRecursionLimit: 100
+
+    maxCitations: 30
+    maxCitationsPerFile: 7
+    minRelevanceScore: 0.45
+
+    tools:
+      order:
+        - web_search
+        - actions
+        - file_search
+        - ocr
+        - execute_code
+        - image_generation
+
+      web_search:
+        providerPriority: [serper, google_cse, tavily, traversaal]
+        firecrawl: true
+        reranker:
+          enabled: true
+          providerPriority: [jina, cohere]
+          topN: 8
+        maxResults: 16
+
+      ocr:
+        enabled: true
+      execute_code:
+        enabled: true
+      image_generation:
+        providers:
+          - openai_images
+          - dalle
+
+# ========================
+# Catálogo “Modelos” = Agentes
+# ========================
+modelSpecs:
+  enforce: true
+  prioritize: true
+  list:
+    - name: "hero"
+      label: "Hero"
+      default: true
+      preset:
+        endpoint: "agents"
+        agent_id: "agent_YTU7ohnOfzEon8WEtdggp"
+
+    - name: "hero-deep-research"
+      label: "Hero Deep Research"
+      preset:
+        endpoint: "agents"
+        agent_id: "agent_0eaIxFnDQSnAcKlUShbhn"
+
+    - name: "hero-prompt-trainer"
+      label: "Hero Prompt Trainer"
+      preset:
+        endpoint: "agents"
+        agent_id: "agent_giLGsVCYY18fvw_Wh9rLz"
+
+# ================================
+# FILE UPLOAD CONFIGURATION
+# ================================
+fileConfig:
+  endpoints:
+    # Se você usa OpenAI Assistants, configure aqui (assistants não herda "default")
+    # assistants:
+    #   fileLimit: 10
+    #   fileSizeLimit: 20
+    #   totalSizeLimit: 100
+    #   supportedMimeTypes:
+    #     - "image/.*"
+    #     - "application/pdf"
+    #     - "text/plain"
+    #     - "text/csv"
+    #     - "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    #     - "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+
+    # Para todos os endpoints NÃO-Assistants (inclui Agents por trás)
+    default:
+      fileLimit: 10
+      fileSizeLimit: 20          # MB por arquivo
+      totalSizeLimit: 100        # MB por envio
+      supportedMimeTypes:
+        # Documentos
+        - "application/pdf"
+        - "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        - "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        - "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+        - "text/csv"
+        - "text/plain"
+
+        # Configs / dados
+        - "application/json"
+        - "application/x-yaml"
+        - "text/yaml"
+
+        # Código como texto (não executáveis)
+        - "text/x-python"
+        - "application/javascript"
+        - "text/x-java-source"
+        - "text/html"
+        - "text/css"
+
+        # Imagens (Vision/OCR)
+        - "image/png"
+        - "image/jpeg"
+        - "image/webp"
+        - "image/tiff"
+        - "image/.*"
+
+        # Áudio (para STT/Whisper)
+        - "audio/mpeg"
+        - "audio/wav"
+        - "audio/mp4"
+
+  # Limite global por arquivo no servidor (MB)
+  serverFileSizeLimit: 200
+
+  # Limite de avatar (MB)
+  avatarSizeLimit: 2
+
+  # Saída padrão para geração de imagens (escolha UM: px OU percentage)
+  imageGeneration:
+    px: 1024
+    # percentage: 100
+
+  # (Opcional em 1.2.8+): redimensionamento no cliente antes do upload
+  # clientImageResize:
+  #   enabled: true
+  #   maxWidth: 1920
+  #   maxHeight: 1080
+  #   quality: 0.9
+  #   outputFormat: "webp"
