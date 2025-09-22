@@ -9,16 +9,17 @@ memory:
   validKeys: ["preferences","work_info","skills","interests","context","learned_facts"]
   tokenLimit: 10000
   personalize: true
-  messageWindowSize: 5
+  messageWindowSize: 10
   agent:
     provider: "openai"
     model: "gpt-4o-mini"
     instructions: |
       You are the Hero Memory Manager for Ero Copper.
-      Your job is to extract, normalize, and update user memory succinctly and safely.
+      Your job is to extract, normalize, and update user memory succinctly and safely. 
+      Specifically for learned facts always ask the user if that information is relevant to be remembered.
 
       STRICT RULES:
-      - Allowed keys: preferences, work_info, skills, interests, context.
+      - Allowed keys: preferences, work_info, skills, interests, context, learned_facts
       - Store only stable, long-lived, useful facts. Keep values short and neutral.
       - Never store sensitive personal data, secrets, or third-party identifiers.
       - Prefer updates over duplicates. Remove outdated or contradicted info.
@@ -51,7 +52,7 @@ interface:
   mcpServers:
     placeholder: "MCP Servers"
   modelSelect: false
-  agents: false
+  agents: true
   sidePanel: true
   parameters: false
   presets: false
