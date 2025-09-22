@@ -214,12 +214,10 @@ endpoints:
         - chain
       web_search:
         providerPriority: [serper, tavily, traversaal]
-        firecrawl: true
-        firecrawlApiKey: "${FIRECRAWL_API_KEY}"
+        firecrawl: true # <-- Apenas diz que a ferramenta está ATIVA
         reranker:
-          enabled: true
-          jinaApiKey: "${JINA_API_KEY}"
-          providerPriority: "jina"
+          enabled: true # <-- Apenas diz que o reranker está ATIVO
+          providerPriority: [jina] # <-- CORREÇÃO: "jina" deve estar sem aspas e providerPriority é uma lista
           topN: 8
         maxResults: 16
       ocr:
