@@ -11,7 +11,7 @@ memory:
   personalize: true
   messageWindowSize: 10
   agent:
-    provider: "openai"
+    provider: "openAI"
     model: "gpt-5-nano"
     instructions: |
       You are the Hero Memory Manager for Ero Copper.
