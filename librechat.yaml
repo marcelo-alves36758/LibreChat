@@ -157,6 +157,14 @@ ocr:
 # Endpoints (Global Tool Config)
 # ========================
 endpoints:
+  openai:
+   title: "OpenAI"
+   apiKey: "${OPENAI_API_KEY}"
+#     # Lista de modelos GPT-5 disponíveis para agentes
+   models:
+     - "gpt-5"      # Para: Raciocínio complexo, conhecimento amplo e tarefas de agente com código.
+     - "gpt-5-mini" # Para: Raciocínio e chat com custo otimizado; equilibra velocidade e capacidade.
+     - "gpt-5-nano" # Para: Tarefas de alto volume, como seguir instruções simples ou classificação.
   agents:
     disableBuilder: false
     recursionLimit: 50
