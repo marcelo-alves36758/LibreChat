@@ -19,6 +19,16 @@ WORKDIR /app
 
 USER node
 
+# --- ADICIONE: copie seu librechat.yaml para dentro da imagem ---
+# Coloque o arquivo lado a lado com o Dockerfile no seu repo
+COPY --chown=node:node librechat.yaml /app/librechat.yaml
+
+# --- ADICIONE: aponte o app para esse caminho ---
+ENV CONFIG_PATH=/app/librechat.yaml
+
+# (opcional) crie a pasta de uploads/storage local
+RUN mkdir -p /app/storage /app/uploads
+
 COPY --chown=node:node package.json package-lock.json ./
 COPY --chown=node:node api/package.json ./api/package.json
 COPY --chown=node:node client/package.json ./client/package.json
