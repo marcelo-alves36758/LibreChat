@@ -2,6 +2,30 @@ version: 1.2.9
 cache: true
 
 # ================================
+memory:
+  disabled: false
+  validKeys: ["preferences","work_info","skills","interests","context"]
+  tokenLimit: 10000
+  personalize: true
+  agent:
+    provider: "openai"
+    model: "gpt-4o-mini"
+    instructions: |
+      You are the Hero Memory Manager for Ero Copper.
+      Your job is to extract, normalize, and update user memory succinctly and safely.
+
+      STRICT RULES:
+      - Allowed keys: preferences, work_info, skills, interests, context.
+      - Store only stable, long-lived, useful facts. Keep values short and neutral.
+      - Never store sensitive personal data, secrets, or third-party identifiers.
+      - Prefer updates over duplicates. Remove outdated or contradicted info.
+      - For temporary context, set an expiresAt or skip storing.
+      OUTPUT: zero or one {key, value} pair to write; if not confident, output none.
+    model_parameters:
+      temperature: 0.1
+
+
+# ================================
 # ROOT / STORAGE
 # ================================
 fileStrategy: "local"  # requer envs do Azure Storage (account/container/conn string)
