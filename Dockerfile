@@ -38,6 +38,15 @@ RUN \
 
 COPY --chown=node:node . .
 
+# === ADIÇÃO: copia o librechat.yaml "baked" e prepara fallback ===
+# Coloque seu librechat.yaml na raiz do repo (mesmo nível do Dockerfile)
+# Ele será usado como padrão, mas pode ser sobrescrito por um bind/file mount.
+COPY --chown=node:node librechat.yaml /app/librechat.baked.yaml
+# Queremos usar /app/librechat.yaml. Se não existir no runtime (sem mount),
+# copiamos do baked na entrada (ver ENTRYPOINT).
+ENV CONFIG_PATH=/app/librechat.yaml
+###############
+
 RUN \
     # React client build
     NODE_OPTIONS="--max-old-space-size=2048" npm run frontend; \
@@ -48,6 +57,23 @@ RUN \
 EXPOSE 3080
 ENV HOST=0.0.0.0
 CMD ["npm", "run", "backend"]
+
+
+# === ADIÇÃO: entrypoint que garante um CONFIG_PATH válido ===
+# Usa root apenas para criar/ajustar o arquivo na inicialização
+USER root
+RUN printf '%s\n' \
+'#!/bin/sh' \
+'set -e' \
+'# se não existir /app/librechat.yaml mas existir o baked, copie' \
+'if [ ! -f "$CONFIG_PATH" ] && [ -f /app/librechat.baked.yaml ]; then' \
+'  cp /app/librechat.baked.yaml "$CONFIG_PATH";' \
+'fi' \
+'exec su node -c "npm run backend"' \
+> /entrypoint.sh && chmod +x /entrypoint.sh
+USER node
+
+ENTRYPOINT ["/entrypoint.sh"]
 
 # Optional: for client with nginx routing
 # FROM nginx:stable-alpine AS nginx-client
