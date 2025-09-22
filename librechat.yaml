@@ -6,7 +6,7 @@ cache: true
 # ================================
 memory:
   disabled: false
-  validKeys: ["preferences","work_info","skills","interests","context"]
+  validKeys: ["preferences","work_info","skills","interests","context","learned_facts"]
   tokenLimit: 10000
   personalize: true
   messageWindowSize: 5
@@ -36,7 +36,11 @@ fileStrategy: "local"
 # Auth / Registration
 # ========================
 registration:
-  socialLogins: []
+  socialLogins: ["openid"]
+  allowedDomains:
+    - "erobr.com"
+    - "erocopper.com"
+    - "ero.com"
 
 # ================================
 # INTERFACE (UI) - Otimizada
@@ -103,16 +107,17 @@ speech:
 # OCR
 # ================================
 ocr:
-  strategy: "mistral_ocr"
+  mistralModel: "${OCR_DEPLOYMENT_NAME}" 
   apiKey: "${OCR_API_KEY}"
   baseURL: "${OCR_BASEURL}"
+  strategy: "azure_mistral_ocr"
 
 # ========================
 # Endpoints (Global Tool Config)
 # ========================
 endpoints:
   agents:
-    disableBuilder: true
+    disableBuilder: false
     recursionLimit: 50
     maxRecursionLimit: 100
     maxCitations: 30
@@ -126,8 +131,10 @@ endpoints:
         - ocr
         - execute_code
         - image_generation
+        - artifacts
+        - chain
       web_search:
-        providerPriority: [serper, google_cse, tavily, traversaal]
+        providerPriority: [serper, tavily, traversaal]
         firecrawl: true
         reranker:
           enabled: true
@@ -153,18 +160,30 @@ modelSpecs:
     - name: "hero"
       label: "Hero"
       default: true
+      iconURL: ""
+      description: "The most comum agent for internal activities"
+      showIconInMenu: true
+      showIconInHeader: true
       preset:
         endpoint: "agents"
         agent_id: "agent_YTU7ohnOfzEon8WEtdggp"
 
     - name: "hero-deep-research"
       label: "Hero Deep Research"
+      iconURL: ""
+      description: "The most complex agent for research activities"
+      showIconInMenu: true
+      showIconInHeader: true
       preset:
         endpoint: "agents"
         agent_id: "agent_0eaIxFnDQSnAcKlUShbhn"
 
     - name: "hero-prompt-trainer"
       label: "Hero Prompt Trainer"
+      iconURL: ""
+      description: "Playground Agent for supporint on how to use Generative AI"
+      showIconInMenu: true
+      showIconInHeader: true
       preset:
         endpoint: "agents"
         agent_id: "agent_giLGsVCYY18fvw_Wh9rLz"
