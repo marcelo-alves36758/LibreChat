@@ -19,9 +19,6 @@ WORKDIR /app
 
 USER node
 
-# --- ADICIONE: aponte o app para esse caminho ---
-ENV CONFIG_PATH=/app/librechat.yaml
-
 # (opcional) crie a pasta de uploads/storage local
 RUN mkdir -p /app/storage /app/uploads
 
