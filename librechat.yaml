@@ -1,6 +1,15 @@
 version: 1.2.9
 cache: true
 
+# --- Seção da API Padrão da OpenAI (Local Correto) ---
+openAI:
+  title: "OpenAI"
+  apiKey: "${OPENAI_API_KEY}"
+  titleModel: "gpt-5-nano"
+  models:
+    "gpt-5": {}
+    "gpt-5-mini": {}
+    "gpt-5-nano": {}
 
 # ================================
 # Memory
