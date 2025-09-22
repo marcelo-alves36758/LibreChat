@@ -90,24 +90,55 @@ rateLimits:
   imageGeneration: { ipMax: 60, ipWindowInMinutes: 60, userMax: 30, userWindowInMinutes: 60 }
 
 # ================================
-# OPENAI/AZURE SPEECH (STT/TTS)
+# OPENAI/AZURE SPEECH (STT/TTS) - VERSÃO COMPLETA
 # ================================
 speech:
-  speechTab:
-    conversationMode: true
-    textToSpeech:
-      automaticPlayback: true
-      cacheTTS: true
-      engineTTS: external
-      voice:  ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer']
+  # --- Configurações da Interface (UI) ---
+  # Habilita a aba de "Voz" na interface.
+  speechTab: true
+  # Ativa o modo de conversação contínua (o microfone continua ouvindo).
+  conversationMode: true
+  # Mostra opções avançadas de microfone na interface (ex: ajuste de sensibilidade).
+  advancedMode: true
+
+  # --- Configurações Gerais de Text-to-Speech (TTS) ---
+  # Toca o áudio da resposta automaticamente.
+  automaticPlayback: true
+  # Velocidade da fala (1.0 = normal, 1.2 = 20% mais rápido, etc.).
+  playbackRate: 1.0
+  # Armazena em cache o áudio gerado para economizar chamadas de API em textos repetidos.
+  cacheTTS: true
+
+  # --- Configurações de Speech-to-Text (STT/Whisper) ---
   stt:
+    # Transcreve automaticamente o áudio detectado.
+    autoTranscribeAudio: true
+    # Nível de decibéis para o microfone começar a capturar. Valores mais baixos (ex: -60) são mais sensíveis.
+    decibelValue: -45
+    # Segundos de silêncio antes de enviar o texto automaticamente para o chat (0 = desativado).
+    autoSendText: 2
+    
+    # Provedor ativo para STT (Whisper)
     openai:
       apiKey: '${STT_API_KEY}'
       model: 'whisper-1'
+      # (Opcional) Você pode especificar o idioma para melhorar a precisão da transcrição.
+      # language: 'pt'
+
+  # --- Configurações de Text-to-Speech (TTS) ---
   tts:
+    # Define qual provedor usar. Deve corresponder a uma das seções abaixo ("openai" ou "azureOpenAI").
+    engine: openai
+    # Voz padrão para a interface. "onyx", "echo", e "fable" são vozes masculinas.
+    voice: "onyx" # <-- ALTERADO
+
+    # Provedor ATIVO para TTS
     openai:
       apiKey: '${TTS_API_KEY}'
       model: 'tts-1'
+      # (Opcional) Você pode especificar o idioma para a síntese de voz.
+      # language: 'pt'
+      # Lista de vozes que aparecerão no menu de seleção da interface.
       voices: ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer']
 
 # ================================
@@ -160,11 +191,10 @@ endpoints:
    title: "OpenAI"
    apiKey: "${OPENAI_API_KEY}"
    titleModel: "gpt-5-nano"
-#     # Lista de modelos GPT-5 disponíveis para agentes
    models:
-     - "gpt-5"      # Para: Raciocínio complexo, conhecimento amplo e tarefas de agente com código.
-     - "gpt-5-mini" # Para: Raciocínio e chat com custo otimizado; equilibra velocidade e capacidade.
-     - "gpt-5-nano" # Para: Tarefas de alto volume, como seguir instruções simples ou classificação.
+      "gpt-5": {}
+      "gpt-5-mini": {}
+      "gpt-5-nano": {}
   agents:
     disableBuilder: false
     recursionLimit: 50
