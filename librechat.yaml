@@ -87,21 +87,17 @@ ocr:
   baseURL: "${OCR_BASEURL}"
   strategy: "azure_mistral_ocr"
 
-openAI:
-  title: "OpenAI"
-  apiKey: "${OPENAI_API_KEY}"
-  titleModel: "gpt-5-nano"
-  models:
-    "gpt-5": {}
-    "gpt-5-mini": {}
-    "gpt-5-nano": {}
 
 # ========================
 # Endpoints (Global Tool Config)
 # ========================
 endpoints:
-  openAI:
-    apiKey: "${OPENAI_API_KEY}"
+  openai:
+    apiKey: ${OPENAI_API_KEY}
+    models:
+      - id: gpt-5
+        name: GPT-5
+        hidden: true
   agents:
     disableBuilder: false
     recursionLimit: 50
