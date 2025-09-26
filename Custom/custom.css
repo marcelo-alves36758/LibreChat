@@ -248,14 +248,11 @@ button:has(svg):focus-visible,
   color: var(--hover-accent) !important;
 }
 
-/* Adicionado: Força a cor de preenchimento em SVGs com `fill="currentColor"` no hover,
-     garantindo que ícones como o de bookmark também mudem de cor. */
 button:hover [fill='currentColor'],
 [role='button']:hover [fill='currentColor'] {
   fill: var(--hover-accent) !important;
 }
 
-/* Garante o mesmo efeito de hover para os botões no painel de controle direito (ambos os temas) */
 #controls-nav button:hover {
   border-style: solid;
   border-color: var(--hover-accent) !important;
@@ -305,8 +302,6 @@ select:hover {
   box-shadow: none !important;
 }
 
-/* Adicionado: Força a cor de fundo correta para caixas de texto no tema dark,
-     sobrescrevendo as classes de utilitário do Tailwind. */
 .dark input[type='text'],
 .dark input[type='email'],
 .dark input[type='password'],
@@ -317,29 +312,10 @@ select:hover {
 }
 
 /* ============================== SWITCHES (ON/OFF) ============================== */
-/* Base para todos os switches */
 [role="switch"] {
   border: 1px solid var(--border-medium) !important;
   transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out !important;
 }
-
-/* Estado DESLIGADO (Unchecked) para ambos os temas */
-[role="switch"][data-state="unchecked"] {
-  background-color: var(--input-background) !important;
-}
-
-/* Estado LIGADO (Checked) - TEMA CLARO */
-:root:not(.dark) [role="switch"][data-state="checked"] {
-  background-color: var(--light-leftpanel-bg) !important; /* Cor do sidebar claro */
-  border-color: var(--brand-primary) !important;
-}
-
-/* Estado LIGADO (Checked) - TEMA ESCURO */
-.dark [role="switch"][data-state="checked"] {
-  background-color: var(--sidebar) !important; /* Cor do sidebar escuro */
-  border-color: var(--primary) !important;
-}
-
 
 /* ============================== SIDEBAR ESQUERDO (GERAL) ============================== */
 .dark #chat-history-nav,
@@ -358,7 +334,7 @@ select:hover {
   --tw-gradient-from: var(--light-leftpanel-bg) !important;
   background-image: linear-gradient(to left, var(--light-leftpanel-bg), transparent) !important;
 }
-/* Chat ATIVO */
+
 [data-testid='convo-item'][aria-current='page'],
 [data-testid='convo-item'].bg-surface-active-alt {
   background-color: var(--surface-active) !important;
@@ -369,7 +345,7 @@ select:hover {
   stroke: currentColor !important;
 }
 :root:not(.dark) #chat-history-nav [data-testid='convo-item']:hover {
-  background-color: color-mix(in oklab, var(--light-leftpanel-bg) 85%, white 15%) !important;
+  background-color: var(--surface-active-alt) !important;
 }
 
 /* ============================== NAV-USER ============================== */
@@ -389,7 +365,7 @@ select:hover {
   text-decoration: none !important;
 }
 [data-testid='nav-user'] {
-  min-height: 60px; /* Aumentado em ~15% */
+  min-height: 60px;
 }
 [data-testid='nav-user']:hover,
 [data-testid='nav-user']:focus,
@@ -409,11 +385,10 @@ nav [role='button'][data-testid='nav-user']:hover {
 }
 
 /* ============================== DIALOGS (GERAL) ============================== */
-/* Seletor re-expandido para incluir painéis de dialog baseados em ID e garantir fundo sólido */
 :root:not(.dark) [id^='headlessui-dialog-panel-'][data-headlessui-state='open'],
 :root:not(.dark) [role='dialog'][data-state='open'],
 :root:not(.dark) [role='dialog'][data-open] {
-  background-color: var(--background) !important; /* Branco puro para light theme */
+  background-color: var(--background) !important;
   color: var(--text-primary) !important;
   border: 1px solid var(--border) !important;
   box-shadow: var(--shadow-xl) !important;
@@ -431,7 +406,6 @@ nav [role='button'][data-testid='nav-user']:hover {
     background-color: var(--background) !important;
 }
 
-
 /* ============================== DIALOG DE CONFIGURAÇÕES ============================== */
 :root:not(.dark) [role='dialog']:has([aria-label='Settings']) {
   background-color: var(--surface-primary) !important;
@@ -447,7 +421,6 @@ nav [role='button'][data-testid='nav-user']:hover {
 }
 
 /* ============================== PAINEL DE EDIÇÃO DE AGENTE ============================== */
-/* Garante que o painel de edição do 'Hero' tenha o fundo correto */
 div.h-auto:has(label[for="instructions"]) {
   background-color: var(--light-leftpanel-bg) !important;
 }
@@ -461,29 +434,6 @@ div.h-auto:has(label[for="instructions"]) {
 }
 .dark #controls-nav {
   background-color: var(--sidebar) !important;
-}
-
-/* ============================== CORREÇÕES DE LAYOUT ============================== */
-/* Ajuste no posicionamento do seletor de modelo.
-   Trocado 'transform' por 'margin-left' para contornar restrições
-   do container pai e permitir o deslocamento completo para a esquerda.
-*/
-
-/* Posição padrão (com sidebar visível) */
-div:has(> div > button[aria-label="Select a model"]) {
-  margin-left: -30rem !important;
-  opacity: 1 !important;
-  transition: margin-left 0.3s ease-in-out !important;
-}
-
-/* Posição quando a sidebar está OCULTA */
-div:has([data-testid="open-sidebar-button"]) + div:has(> div > button[aria-label="Select a model"]) {
-  margin-left: 1.5rem !important;
-}
-
-/* Garante que o seletor de modelo seja sempre clicável */
-.pointer-events-none.translate-x-\[-100px\] {
-    pointer-events: auto !important;
 }
 
 /* ============================== ARTIFACTS PANEL ============================== */
@@ -533,7 +483,7 @@ div:has([data-testid="open-sidebar-button"]) + div:has(> div > button[aria-label
   background-color: transparent !important;
   color: var(--code-text, #f3f9fa) !important;
   font-family: var(--font-mono) !important;
-  font-size: calc(14px - 4pt) !important; /* Reduzido em 4pt */
+  font-size: calc(14px - 4pt) !important;
   white-space: pre !important;
 }
 #artifacts-panel #artifacts-code .hljs-comment,
@@ -549,7 +499,88 @@ div:has([data-testid="open-sidebar-button"]) + div:has(> div > button[aria-label
   color: var(--code-string, #2e8b47);
 }
 
-/* ============================== SUBSTITUIÇÃO DE ÍCONE (LOGO) ============================== */
+/* ============================== PERSONALIZAÇÕES FINAIS INTEGRADAS ============================== */
+
+/* CORREÇÃO DA ANIMAÇÃO DO SELETOR DE MODELO */
+div[class*="translate-x-[-100px]"] {
+  margin-left: 0.5rem !important;
+}
+
+/* CAMPO DE BUSCA TRANSPARENTE */
+[data-testid='nav'] input[aria-label="Buscar mensagens"],
+[data-testid='nav'] input[aria-label="Buscar mensagens"]:hover,
+[data-testid='nav'] input[aria-label="Buscar mensagens"]:focus,
+[data-testid='nav'] input[aria-label="Buscar mensagens"]:focus-visible {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+/* ALTURA DO NOME DE USUÁRIO */
+[data-testid='nav-user'] .overflow-hidden.text-ellipsis.whitespace-nowrap {
+  padding-top: 2px;
+  padding-bottom: 2px;
+}
+
+/* COR DOS ÍCONES DO PAINEL DIREITO */
+#controls-nav button svg {
+  color: var(--text-primary) !important;
+}
+
+/* TAMANHO DA FONTE NO CHAT */
+.prose {
+  font-size: calc(var(--font-size) - 1pt);
+}
+
+/* EFEITO DE HOVER NO CHAT ATIVO */
+[data-testid='convo-item'][aria-current='page']:hover {
+  background-color: var(--surface-active) !important;
+}
+
+/* ESTILO UNIFICADO DOS BOTÕES DE AÇÃO */
+div[class*="group-[[data-collapsed=true]]"] > button,
+button[data-testid="bookmark-menu"] {
+  background-color: transparent !important;
+  border: 1px solid var(--border-light) !important;
+  border-radius: 9999px !important;
+}
+@media (min-width: 768px) {
+  div[class*="group-[[data-collapsed=true]]"] > button,
+  button[data-testid="bookmark-menu"] {
+    border-radius: 0.75rem !important;
+  }
+}
+
+/* MELHORIA DE CONTRASTE (SLIDER E SWITCH) */
+/* --- Slider --- */
+.dark div:has(> span[role="slider"]) {
+  background-color: var(--surface-tertiary) !important;
+}
+span[role="slider"] {
+  background-color: var(--primary) !important;
+  border-color: var(--background) !important;
+}
+
+/* --- Toggle Switch --- */
+/* Estado LIGADO */
+button[role="switch"][data-state="checked"] {
+  background-color: var(--surface-tertiary) !important;
+  border-color: transparent !important;
+}
+button[role="switch"][data-state="checked"] > span {
+  background-color: var(--primary) !important;
+}
+/* Estado DESLIGADO */
+button[role="switch"][data-state="unchecked"] {
+  border: 1px solid var(--border-medium) !important;
+}
+button[role="switch"][data-state="unchecked"] > span {
+  background-color: var(--gray-400) !important;
+}
+
+
 .lucide.lucide-feather {
   background-repeat: no-repeat;
   background-size: contain;
@@ -567,70 +598,4 @@ div:has([data-testid="open-sidebar-button"]) + div:has(> div > button[aria-label
 /* Esconde os desenhos (paths) do ícone original */
 .lucide.lucide-feather path {
   visibility: hidden;
-}
-
-/* ============================== SUBSTITUIÇÃO DE AVATAR (TODOS OS HEROS) ============================== */
-
-/* 1. Prepara o contêiner de TODOS os Heros (principal e adicionais). */
-main div.flex.flex-col.md\:flex-row.items-center.justify-center.gap-2:has(img[alt="Hero"]),
-main div.flex.flex-col.md\:flex-row.items-center.justify-center.gap-2:has(svg.lucide-feather) {
-  position: relative;
-  min-height: 550px; /* Altura mínima consistente para desktop */
-}
-
-/* 2. Cria o pseudo-elemento que conterá a imagem de fundo para TODOS os Heros. */
-main div.flex.flex-col.md\:flex-row.items-center.justify-center.gap-2:has(img[alt="Hero"])::before,
-main div.flex.flex-col.md\:flex-row.items-center.justify-center.gap-2:has(svg.lucide-feather)::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center 25%; /* Posição consistente para desktop */
-  z-index: -1;
-}
-
-/* 3. DEFINE AS IMAGENS POR IDIOMA (atualmente usando a mesma imagem para todos) */
-
-/* Imagem Padrão (fallback para Inglês e outros idiomas não especificados) */
-main div.flex.flex-col.md\:flex-row.items-center.justify-center.gap-2:has(img[alt="Hero"])::before,
-main div.flex.flex-col.md\:flex-row.items-center.justify-center.gap-2:has(svg.lucide-feather)::before {
-  background-image: url('https://chat.erobr.com/assets/hero-avatar.QPMlkftL.png');
-}
-
-/* Imagem para Português (cobre pt-BR, pt-PT, etc.) */
-html[lang|="pt"] main div.flex.flex-col.md\:flex-row.items-center.justify-center.gap-2:has(img[alt="Hero"])::before,
-html[lang|="pt"] main div.flex.flex-col.md\:flex-row.items-center.justify-center.gap-2:has(svg.lucide-feather)::before {
-  background-image: url('https://chat.erobr.com/assets/hero-avatar.QPMlkftL.png');
-}
-
-/* Imagem para Espanhol (cobre es-ES, es-MX, etc.) */
-html[lang|="es"] main div.flex.flex-col.md\:flex-row.items-center.justify-center.gap-2:has(img[alt="Hero"])::before,
-html[lang|="es"] main div.flex.flex-col.md\:flex-row.items-center.justify-center.gap-2:has(svg.lucide-feather)::before {
-  background-image: url('https://chat.erobr.com/assets/hero-avatar.QPMlkftL.png');
-}
-
-/* 4. Esconde o conteúdo original (avatar pequeno e texto "Hero") para TODOS os Heros. */
-main div.flex.flex-col.md\:flex-row.items-center.justify-center.gap-2:has(img[alt="Hero"]) > div,
-main div.flex.flex-col.md\:flex-row.items-center.justify-center.gap-2:has(svg.lucide-feather) > div {
-  opacity: 0;
-  pointer-events: none; /* Impede a interação com os elementos invisíveis. */
-}
-
-/* 5. AJUSTES PARA DISPOSITIVOS MÓVEIS (telas com até 768px de largura) */
-@media (max-width: 768px) {
-  /* Reduz a altura mínima do contêiner em telas menores, consistente para todos. */
-  main div.flex.flex-col.md\:flex-row.items-center.justify-center.gap-2:has(img[alt="Hero"]),
-  main div.flex.flex-col.md\:flex-row.items-center.justify-center.gap-2:has(svg.lucide-feather) {
-    min-height: 350px;
-  }
-
-  /* Centraliza a imagem verticalmente no espaço menor do celular, consistente para todos. */
-  main div.flex.flex-col.md\:flex-row.items-center.justify-center.gap-2:has(img[alt="Hero"])::before,
-  main div.flex.flex-col.md\:flex-row.items-center.justify-center.gap-2:has(svg.lucide-feather)::before {
-    background-position: center center;
-  }
 }
