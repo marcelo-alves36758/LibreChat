@@ -16,9 +16,12 @@ COPY packages/data-provider/package.json ./packages/data-provider/package.json
 COPY packages/data-schemas/package.json ./packages/data-schemas/package.json
 COPY packages/api/package.json ./packages/api/package.json
 # copia sua config para dentro da imagem
-COPY custom/librechat.yaml /app/config/librechat.yaml
+COPY custom/librechat.yaml /app/librechat.yaml
 
 RUN npm ci --no-audit
+
+# garante que o arquivo está no lugar que o backend lê
+RUN test -f /app/librechat.yaml && echo "OK: /app/librechat.yaml presente" || (echo "ERRO: /app/librechat.yaml ausente"; exit 1)
 
 # Copia todo o código (inclui /custom/style.css e /custom/librechat.yaml)
 COPY . .
