@@ -2,7 +2,7 @@
 FROM node:20-alpine AS base
 WORKDIR /app
 
-# Dependências de build
+# Dependências de build (node-gyp etc.)
 RUN apk add --no-cache python3 py3-pip build-base
 
 # (opcional) bust de cache de tema
@@ -43,12 +43,9 @@ RUN set -e; \
     if [ -f "$T" ]; then \
       echo ">> Substituindo $T por $SRC"; \
       cp "$SRC" "$T"; \
-      # --- Sanitização: LF, remover BOM, NBSP -> espaço ---
-      sed -i 's/\r$//' "$T"; \
-      # remove BOM se existir
-      sed -i '1s/^\xEF\xBB\xBF//' "$T"; \
-      # NBSP (C2 A0) -> espaço ASCII
-      perl -0777 -pe "s/\x{C2}\x{A0}/ /g" -i "$T"; \
+      # Sanitização leve (opcional; você já removeu especiais)
+      sed -i 's/\r$//' "$T" || true; \
+      sed -i '1s/^\xEF\xBB\xBF//' "$T" || true; \
       REPLACED=1; \
     fi; \
   done; \
