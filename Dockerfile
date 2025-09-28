@@ -1,57 +1,39 @@
-# v0.8.0-rc4
-
-# Base node image
-FROM node:20-alpine AS node
-
-# Install jemalloc
-RUN apk add --no-cache jemalloc
-RUN apk add --no-cache python3 py3-pip uv
-
-# Set environment variable to use jemalloc
-ENV LD_PRELOAD=/usr/lib/libjemalloc.so.2
-
-# Add `uv` for extended MCP support
-COPY --from=ghcr.io/astral-sh/uv:0.6.13 /uv /uvx /bin/
-RUN uv --version
-
-RUN mkdir -p /app && chown node:node /app
+# Base
+FROM node:20-alpine AS base
 WORKDIR /app
 
-USER node
+# Dependências do build
+RUN apk add --no-cache python3 py3-pip build-base
 
-COPY --chown=node:node package.json package-lock.json ./
-COPY --chown=node:node api/package.json ./api/package.json
-COPY --chown=node:node client/package.json ./client/package.json
-COPY --chown=node:node packages/data-provider/package.json ./packages/data-provider/package.json
-COPY --chown=node:node packages/data-schemas/package.json ./packages/data-schemas/package.json
-COPY --chown=node:node packages/api/package.json ./packages/api/package.json
+# Copia manifests (instalação determinística)
+COPY package.json package-lock.json ./
+COPY api/package.json ./api/package.json
+COPY client/package.json ./client/package.json
+COPY packages/data-provider/package.json ./packages/data-provider/package.json
+COPY packages/data-schemas/package.json ./packages/data-schemas/package.json
+COPY packages/api/package.json ./packages/api/package.json
 
-RUN \
-    # Allow mounting of these files, which have no default
-    touch .env ; \
-    # Create directories for the volumes to inherit the correct permissions
-    mkdir -p /app/client/public/images /app/api/logs /app/uploads ; \
-    npm config set fetch-retry-maxtimeout 600000 ; \
-    npm config set fetch-retries 5 ; \
-    npm config set fetch-retry-mintimeout 15000 ; \
-    npm ci --no-audit
+# Instala TODAS deps (dev + prod) para build
+RUN npm ci --no-audit
 
-COPY --chown=node:node . .
+# Copia código
+COPY . .
 
-RUN \
-    # React client build
-    NODE_OPTIONS="--max-old-space-size=2048" npm run frontend; \
-    npm prune --production; \
-    npm cache clean --force
+# Substitui o style.css original pelo seu (se existir esse caminho)
+# Ajuste se o projeto estiver em outro caminho de styles
+RUN if [ -f /app/custom/style.css ]; then \
+      echo ">> Aplicando custom/style.css"; \
+      cp /app/custom/style.css /app/client/src/styles/style.css; \
+    fi
 
-# Node API setup
+# Build do client (gera /app/client/dist)
+ENV NODE_OPTIONS="--max-old-space-size=2048"
+RUN npm run frontend
+
+# Limpa dev deps e cache para imagem final mais leve
+RUN npm prune --production && npm cache clean --force
+
+# Runtime
 EXPOSE 3080
 ENV HOST=0.0.0.0
 CMD ["npm", "run", "backend"]
-
-# Optional: for client with nginx routing
-# FROM nginx:stable-alpine AS nginx-client
-# WORKDIR /usr/share/nginx/html
-# COPY --from=node /app/client/dist /usr/share/nginx/html
-# COPY client/nginx.conf /etc/nginx/conf.d/default.conf
-# ENTRYPOINT ["nginx", "-g", "daemon off;"]
