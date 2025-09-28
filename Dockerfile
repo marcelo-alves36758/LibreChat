@@ -15,6 +15,9 @@ COPY client/package.json ./client/package.json
 COPY packages/data-provider/package.json ./packages/data-provider/package.json
 COPY packages/data-schemas/package.json ./packages/data-schemas/package.json
 COPY packages/api/package.json ./packages/api/package.json
+# copia sua config para dentro da imagem
+COPY custom/librechat.yaml /app/config/librechat.yaml
+
 RUN npm ci --no-audit
 
 # Copia todo o código (inclui /custom/style.css e /custom/librechat.yaml)
