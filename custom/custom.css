@@ -665,3 +665,51 @@ button[aria-label="Export options"]:hover,
         border-radius: 0.75rem !important; /* md:rounded-xl */
     }
 }
+
+* === HERO PRIORITY SHIM (tokens com prioridade garantida) === */
+:where(html):root,
+:where(html.dark),
+:where(.dark) {
+  /* superfícies / layout */
+  --surface-primary:        var(--surface-primary) !important;
+  --surface-secondary:      var(--surface-secondary) !important;
+  --surface-tertiary:       var(--surface-tertiary) !important;
+  --surface-primary-alt:    var(--surface-primary-alt) !important;
+  --surface-active:         var(--surface-active) !important;
+  --surface-active-alt:     var(--surface-active-alt) !important;
+  --surface-hover:          var(--surface-hover) !important;
+  --surface-chat:           var(--surface-chat) !important;
+  --surface-dialog:         var(--surface-dialog) !important;
+
+  /* texto / bordas / foco */
+  --text-primary:           var(--text-primary) !important;
+  --text-secondary:         var(--text-secondary) !important;
+  --text-tertiary:          var(--text-tertiary) !important;
+  --border:                 var(--border) !important;
+  --border-light:           var(--border-light) !important;
+  --border-medium:          var(--border-medium) !important;
+
+  /* foco / anel (alguns temas usam --ring e não --ring-primary) */
+  --ring-primary:           var(--ring-primary, #14B8A6) !important;
+  --ring:                   var(--ring-primary, #14B8A6) !important;
+
+  /* botões / ação */
+  --surface-submit:         var(--surface-submit) !important;
+  --surface-submit-hover:   var(--surface-submit-hover) !important;
+
+  /* sidebar */
+  --sidebar:                var(--sidebar) !important;
+  --sidebar-foreground:     var(--sidebar-foreground) !important;
+  --sidebar-accent:         var(--sidebar-accent) !important;
+  --sidebar-border:         var(--sidebar-border) !important;
+}
+
+/* reforços mínimos (onde Tailwind utilitário insiste) */
+html body .nav                { background: var(--surface-primary-alt) !important; }
+html body .bg-surface-chat    { background: var(--surface-chat) !important; }
+html body textarea#prompt-textarea { color: var(--text-primary) !important; }
+html body button              { border-color: var(--border-light) !important; }
+
+/* fonte global, se quiser garantir */
+html, body { font-family: var(--font-sans, Nunito, system-ui, sans-serif) !important; }
+
