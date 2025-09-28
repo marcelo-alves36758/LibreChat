@@ -1,4 +1,4 @@
-# Dockerfile — LibreChat FE+BE (compatível) substitui CSS base por custom/hero.css
+# Dockerfile — LibreChat FE+BE (compatível) substitui style.css por custom/hero.css + sanitização
 FROM node:20-alpine AS base
 WORKDIR /app
 
@@ -29,20 +29,26 @@ RUN test -f /app/librechat.yaml \
 # Código do projeto (inclui /custom)
 COPY . .
 
-# ====== Substituição do CSS base (pré-build, compat hero.css OU style.css) ======
-# Usa custom/hero.css (preferencial) ou custom/style.css (fallback)
-# Alvos possíveis (ordem): client/src/hero.css, client/src/style.css, packages/client/src/styles/style.css
+# ====== Substituição do CSS base (pré-build) ======
+# Fonte: custom/hero.css (ou custom/style.css fallback)
+# Alvos (ordem): client/src/style.css, client/src/hero.css, packages/client/src/styles/style.css
 RUN set -e; \
   if [ -f /app/custom/hero.css ]; then SRC="/app/custom/hero.css"; \
   elif [ -f /app/custom/style.css ]; then SRC="/app/custom/style.css"; \
   else echo "ERRO: nem /app/custom/hero.css nem /app/custom/style.css encontrados"; exit 1; fi; \
   echo ">> CSS fonte: $SRC"; \
-  TARGETS='/app/client/src/hero.css /app/client/src/style.css /app/packages/client/src/styles/style.css'; \
+  TARGETS='/app/client/src/style.css /app/client/src/hero.css /app/packages/client/src/styles/style.css'; \
   REPLACED=0; \
   for T in $TARGETS; do \
     if [ -f "$T" ]; then \
       echo ">> Substituindo $T por $SRC"; \
       cp "$SRC" "$T"; \
+      # --- Sanitização: LF, remover BOM, NBSP -> espaço ---
+      sed -i 's/\r$//' "$T"; \
+      # remove BOM se existir
+      sed -i '1s/^\xEF\xBB\xBF//' "$T"; \
+      # NBSP (C2 A0) -> espaço ASCII
+      perl -0777 -pe "s/\x{C2}\x{A0}/ /g" -i "$T"; \
       REPLACED=1; \
     fi; \
   done; \
@@ -51,7 +57,7 @@ RUN set -e; \
     echo "Verifique onde está o stylesheet principal no seu fork e ajuste o Dockerfile."; \
     exit 1; \
   fi; \
-  echo ">> Primeiras linhas do CSS aplicado:"; head -n 8 "$SRC"
+  echo ">> Primeiras linhas do CSS aplicado:"; head -n 12 "$SRC"
 
 # ====== Build do client ======
 ENV NODE_OPTIONS="--max-old-space-size=2048"
