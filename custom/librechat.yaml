@@ -1,0 +1,318 @@
+version: 1.2.9
+cache: true
+
+# =============================
+# Memory
+# =============================
+memory:
+  disabled: false
+  validKeys: ["preferences","work_info","skills","interests","context","learned_facts"]
+  tokenLimit: 10000
+  personalize: true
+  messageWindowSize: 10
+  agent:
+    provider: "openAI"
+    model: "gpt-5-nano"
+    instructions: |
+      You are the Hero Memory Manager for Ero Copper.
+      Your job is to extract, normalize, and update user memory succinctly and safely. 
+      Specifically for learned facts always ask the user if that information is relevant to be remembered.
+
+      STRICT RULES:
+      - Allowed keys: preferences, work_info, skills, interests, context, learned_facts
+      - Store only stable, long-lived, useful facts. Keep values short and neutral.
+      - Never store sensitive personal data, secrets, or third-party identifiers.
+      - Prefer updates over duplicates. Remove outdated or contradicted info.
+      - For temporary context, set an expiresAt or skip storing.
+      OUTPUT: zero or one {key, value} pair to write; if not confident, output none.
+    model_parameters:
+      temperature: 0.1
+
+
+# ================================
+# Storage
+# ================================
+# # --- ESTRATÉGIA DE ARMAZENAMENTO DE ARQUIVOS ---
+# # Define o serviço a ser usado para upload e armazenamento de arquivos.
+# # O valor deve ser a string exata "azure_blob".
+# fileStrategy: "azure_blob"
+fileStrategy: "local"
+
+
+# ================================
+# INTERFACE (UI) - Otimizada
+# ================================
+interface:
+  title: 'Hero'
+  customWelcome: "{{user.name}}, welcome to Hero! An Ero assisted intelligence model"
+  # CORRETO: Estas chaves ficam no nível principal
+  appTitle: "Hero - Ero AI Assistant"
+  customFooter: "Hero - Please always verify the answers | Sempre verifique as respostas."
+  # Temporary chat retention period in hours (2 days = 48 hours)
+  temporaryChatRetention: 48
+  mcpServers:
+    placeholder: "MCP Servers"
+  modelSelect: false
+  agents: true
+  sidePanel: true
+  parameters: false
+  presets: false
+  prompts: true
+  bookmarks: false
+  multiConvo: false
+  webSearch: true
+  fileSearch: true
+  runCode: true
+  hideEndpoints:
+    - openAI
+    - azureOpenAI
+    - custom
+
+# ================================
+# RATE LIMITS
+# ================================
+rateLimits:
+  fileUploads: { ipMax: 120, ipWindowInMinutes: 60, userMax: 60, userWindowInMinutes: 60 }
+  conversationsImport: { ipMax: 30, ipWindowInMinutes: 60, userMax: 20, userWindowInMinutes: 60 }
+  stt: { ipMax: 120, ipWindowInMinutes: 10, userMax: 60, userWindowInMinutes: 10, maxSecondsPerRequest: 180 }
+  tts: { ipMax: 120, ipWindowInMinutes: 10, userMax: 60, userWindowInMinutes: 10, maxCharsPerRequest: 1200 }
+  webSearch: { ipMax: 100, ipWindowInMinutes: 15, userMax: 40, userWindowInMinutes: 15 }
+  actions: { ipMax: 200, ipWindowInMinutes: 60, userMax: 100, userWindowInMinutes: 60 }
+  codeInterpreter: { ipMax: 60, ipWindowInMinutes: 60, userMax: 30, userWindowInMinutes: 60, maxTimeoutSeconds: 60 }
+  imageGeneration: { ipMax: 60, ipWindowInMinutes: 60, userMax: 30, userWindowInMinutes: 60 }
+
+# ================================
+# OCR
+# ================================
+#ocr:
+#  mistralModel: "${OCR_DEPLOYMENT_NAME}" 
+#  apiKey: "${OCR_API_KEY}"
+#  baseURL: "${OCR_BASEURL}"
+#  strategy: "azure_mistral_ocr"
+
+
+# ========================
+# Endpoints (Global Tool Config)
+# ========================
+endpoints:
+  agents:
+    disableBuilder: false
+    recursionLimit: 50
+    maxRecursionLimit: 100
+    # 🔧 Zod impõe limites: ≤ 50 e ≤ 10
+    maxCitations: 50            # antes 200 (causava erro)
+    maxCitationsPerFile: 10     # antes 200 (causava erro)
+    # mantém recall alto
+    minRelevanceScore: 0.12
+    tools:
+      order:
+        - web_search
+        - actions
+        - file_search
+        - ocr
+        - execute_code
+        - image_generation
+        - artifacts
+        - chain
+      web_search:
+        providerPriority: [serper, tavily, traversaal]
+        firecrawl: true # <-- Apenas diz que a ferramenta está ATIVA
+        reranker:
+          enabled: true # <-- Apenas diz que o reranker está ATIVO
+          providerPriority: [jina] # <-- CORREÇÃO: "jina" deve estar sem aspas e providerPriority é uma lista
+          topN: 8
+        maxResults: 16
+      file_search:
+        enabled: true
+        minRelevanceScore: 0.12
+        k: 120
+        maxCitations: 50
+        maxCitationsPerFile: 10
+      ocr:
+        enabled: true
+      execute_code:
+        enabled: true
+      image_generation:
+        providers:
+          - openai_images
+          - dalle
+
+
+# ===================================================================
+# ARQUIVO DE CONFIGURAÇÃO FINAL (Desativado por padrão)
+# ===================================================================
+# # --- CONFIGURAÇÃO DOS MODELOS AZURE OPENAI ---
+# azureOpenAI:
+#   titleModel: "gpt-4o"
+#   assistants: true
+#   embeddings:
+#     deploymentName: "hero-embedding-small"
+#     version: "2023-05-15"
+#   groups:
+#     # --- Grupo 1: Modelos da Região Sweden Central (PRINCIPAL) ---
+#     - group: "sweden-central-models"
+#       baseURL: "${AZURE_OPENAI_ENDPOINT}"
+#       apiKey: "${AZURE_OPENAI_API_KEY}"
+#       models:
+#         gpt-5:
+#           deploymentName: "hero-gpt-5"
+#           version: "2025-04-01-preview"
+#         gpt-5-mini:
+#           deploymentName: "hero-gpt-5-mini"
+#           version: "2025-04-01-preview"
+#         gpt-4o:
+#           deploymentName: "hero-gpt-4o"
+#           version: "2025-04-01-preview"
+#         gpt-4o-mini:
+#           deploymentName: "hero-gpt-4o-mini"
+#           version: "2025-01-01-preview"
+#         dall-e-3:
+#           deploymentName: "hero-dalle-3"
+#           version: "2024-02-01"
+#         gpt-image-1:
+#           deploymentName: "hero-gpt-image-1"
+#           version: "2025-04-01-preview"
+#         tts:
+#           deploymentName: "hero-tts"
+#           version: "2025-03-01-preview"
+#     # --- Grupo 2: Modelos da Região East US 2 (SECUNDÁRIO) ---
+#     - group: "eastus2-models"
+#       baseURL: "${AZURE_OPENAI_EASTUS2_ENDPOINT}"
+#       apiKey: "${AZURE_OPENAI_EASTUS2_API_KEY}"
+#       models:
+#         gpt-5:
+#           deploymentName: "gpt-5"
+#           version: "2025-04-01-preview"
+#         gpt-5-mini:
+#           deploymentName: "hero-gpt5-mini"
+#           version: "2025-04-01-preview"
+#         gpt-4o:
+#           deploymentName: "hero-gpt4o"
+#           version: "2025-01-01-preview"
+#         gpt-4o-mini:
+#           deploymentName: "hero-gpt4o-mini"
+#           version: "2025-01-01-preview"
+#         text-embedding-3-small:
+#           deploymentName: "hero-embedding-small"
+#           version: "2023-05-15"
+#   # TIPO DE ENDPOINT: Databricks
+#   # Seção dedicada para modelos servidos pelo Databricks.
+#   databricks:
+#     title: "Databricks"
+#     apiKey: "${DATABRICKS_API_KEY}"
+#     baseURL: "${DATABRICKS_BASE_URL}"
+#     models:
+#       "databricks/dbrx-instruct":
+#         maxOutputTokens: 16384
+#       "databricks/llama-3-70b-instruct":
+#         maxOutputTokens: 8192
+#   # TIPO DE ENDPOINT: Ferramentas Customizadas
+#   # Seção para ferramentas que os agentes podem usar (ex: Azure Cognitive Services).
+#   custom:
+#     - name: "AzureVision"
+#       baseURL: "https://hero-aivision.cognitiveservices.azure.com/computervision/imageanalysis:analyze?api-version=2024-02-01&features=read"
+#       apiKey: "${AZURE_VISION_EASTUS2_API_KEY}"
+#       headers:
+#         Ocp-Apim-Subscription-Key: "${AZURE_VISION_EASTUS2_API_KEY}"
+#     - name: "AzureDocIntel"
+#       baseURL: "https://hero-docintel.cognitiveservices.azure.com/documentintelligence/documentModels/prebuilt-read:analyze?api-version=2024-02-29-preview"
+#       apiKey: "${AZURE_DOCINTEL_EASTUS2_API_KEY}"
+#       headers:
+#         Ocp-Apim-Subscription-Key: "${AZURE_DOCINTEL_EASTUS2_API_KEY}"
+
+# ========================
+# Model Catalog (Agent List)
+# ========================
+modelSpecs:
+  enforce: true
+  prioritize: true
+  list:
+    - name: "hero"
+      label: "Hero"
+      default: true
+      description: "The most comum agent for internal activities"
+      showIconInMenu: true
+      showIconInHeader: true
+      preset:
+        endpoint: "agents"
+        agent_id: "agent_YTU7ohnOfzEon8WEtdggp"
+
+    - name: "hero-deep-research"
+      label: "Hero Deep Research"
+      description: "The most complex agent for research activities"
+      showIconInMenu: true
+      showIconInHeader: true
+      preset:
+        endpoint: "agents"
+        agent_id: "agent_0eaIxFnDQSnAcKlUShbhn"
+
+    - name: "hero-prompt-trainer"
+      label: "Hero Prompt Trainer"
+      description: "Playground Agent for supporint on how to use Generative AI"
+      showIconInMenu: true
+      showIconInHeader: true
+      preset:
+        endpoint: "agents"
+        agent_id: "agent_giLGsVCYY18fvw_Wh9rLz"
+
+# ================================
+# File Upload Configuration
+# ================================
+fileConfig:
+  endpoints:
+    default:
+      fileLimit: 10
+      fileSizeLimit: 20
+      totalSizeLimit: 100
+      supportedMimeTypes:
+        - "application/pdf"
+        - "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        - "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        - "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+        - "text/csv"
+        - "text/plain"
+        - "application/json"
+        - "application/x-yaml"
+        - "text/yaml"
+        - "text/x-python"
+        - "application/javascript"
+        - "text/x-java-source"
+        - "text/html"
+        - "text/css"
+        - "image/png"
+        - "image/jpeg"
+        - "image/webp"
+        - "image/tiff"
+        - "image/.*"
+        - "audio/mpeg"
+        - "audio/wav"
+        - "audio/mp4"
+  serverFileSizeLimit: 200
+  avatarSizeLimit: 2
+  imageGeneration:
+    px: 1024
+
+speech:
+  speechTab:
+    conversationMode: true
+    advancedMode: false
+    speechToText:
+      engineSTT: "external"
+      autoTranscribeAudio: true
+      decibelValue: -45
+      autoSendText: 0
+    textToSpeech:
+      engineTTS: "external"
+      voice: "alloy"
+      automaticPlayback: true
+      playbackRate: 1.0
+      cacheTTS: true
+  stt:
+    openai:
+      apiKey: '${STT_API_KEY}'
+      model: 'whisper-1'
+  tts:
+    openai:
+      apiKey: '${TTS_API_KEY}'
+      model: 'tts-1'
+      voices: ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer']
