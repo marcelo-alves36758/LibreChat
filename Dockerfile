@@ -1,11 +1,11 @@
-# Dockerfile — LibreChat FE+BE (seguro) com injeção de custom.css no dist
+# Dockerfile — LibreChat FE+BE (compatível) substitui CSS base por custom/hero.css
 FROM node:20-alpine AS base
 WORKDIR /app
 
 # Dependências de build
 RUN apk add --no-cache python3 py3-pip build-base
 
-# Opcional: bust de cache quando mudar o tema (passe --build-arg THEME_SHA=...)
+# (opcional) bust de cache de tema
 ARG THEME_SHA=dev
 
 # Manifests — instalação determinística
@@ -16,47 +16,51 @@ COPY packages/data-provider/package.json ./packages/data-provider/package.json
 COPY packages/data-schemas/package.json ./packages/data-schemas/package.json
 COPY packages/api/package.json ./packages/api/package.json
 
-# Copia a config para onde o backend REALMENTE lê
+# Configuração do backend (custom config)
 COPY custom/librechat.yaml /app/librechat.yaml
 
 RUN npm ci --no-audit
 
-# Asserção: a config precisa existir no caminho correto
+# Asserção: config deve existir
 RUN test -f /app/librechat.yaml \
   && echo "OK: /app/librechat.yaml presente" \
   || (echo "ERRO: /app/librechat.yaml ausente"; exit 1)
 
-# Código do projeto (inclui a pasta custom/)
+# Código do projeto (inclui /custom)
 COPY . .
 
-# ====== Build do client (gera /app/client/dist) ======
+# ====== Substituição do CSS base (pré-build, compat hero.css OU style.css) ======
+# Usa custom/hero.css (preferencial) ou custom/style.css (fallback)
+# Alvos possíveis (ordem): client/src/hero.css, client/src/style.css, packages/client/src/styles/style.css
+RUN set -e; \
+  if [ -f /app/custom/hero.css ]; then SRC="/app/custom/hero.css"; \
+  elif [ -f /app/custom/style.css ]; then SRC="/app/custom/style.css"; \
+  else echo "ERRO: nem /app/custom/hero.css nem /app/custom/style.css encontrados"; exit 1; fi; \
+  echo ">> CSS fonte: $SRC"; \
+  TARGETS='/app/client/src/hero.css /app/client/src/style.css /app/packages/client/src/styles/style.css'; \
+  REPLACED=0; \
+  for T in $TARGETS; do \
+    if [ -f "$T" ]; then \
+      echo ">> Substituindo $T por $SRC"; \
+      cp "$SRC" "$T"; \
+      REPLACED=1; \
+    fi; \
+  done; \
+  if [ $REPLACED -eq 0 ]; then \
+    echo "ERRO: nenhum alvo de CSS encontrado nos caminhos conhecidos."; \
+    echo "Verifique onde está o stylesheet principal no seu fork e ajuste o Dockerfile."; \
+    exit 1; \
+  fi; \
+  echo ">> Primeiras linhas do CSS aplicado:"; head -n 8 "$SRC"
+
+# ====== Build do client ======
 ENV NODE_OPTIONS="--max-old-space-size=2048"
 RUN npm run frontend
 
-# ====== Injeção segura do tema (pós-build) ======
-# Usamos custom/custom.css (apenas os patches) como /assets/hero.css,
-# e injetamos um <link> no index.html para garantir última prioridade.
-RUN if [ -f /app/custom/custom.css ]; then \
-      echo ">> Injetando /assets/hero.css (patches) e linkando no index.html"; \
-      mkdir -p /app/client/dist/assets; \
-      cp /app/custom/custom.css /app/client/dist/assets/hero.css; \
-      if [ -f /app/client/dist/index.html ]; then \
-        # injeta o link antes de </head>
-        sed -i 's#</head>#  <link rel="stylesheet" href="/assets/hero.css">\n</head>#' /app/client/dist/index.html; \
-      else \
-        echo "WARN: /app/client/dist/index.html não encontrado"; \
-      fi; \
-    else \
-      echo "WARN: /app/custom/custom.css não encontrado; nenhum patch de CSS será aplicado"; \
-    fi
-
-# Asserções: se houver custom.css, hero.css e o link DEVEM existir
-RUN if [ -f /app/custom/custom.css ]; then \
-      test -f /app/client/dist/assets/hero.css \
-        || (echo "ERRO: /app/client/dist/assets/hero.css ausente"; exit 1); \
-      grep -q 'assets/hero.css' /app/client/dist/index.html \
-        || (echo "ERRO: link para hero.css não foi injetado no index.html"; exit 1); \
-    fi
+# ====== Compat extra: stub de auth.json (silencia ENOENT sem impactar env/yaml) ======
+RUN mkdir -p /app/api/data && \
+    { [ -f /app/api/data/auth.json ] || echo '{}' > /app/api/data/auth.json; } && \
+    echo "OK: /app/api/data/auth.json presente (stub se não existia)"
 
 # ====== Limpeza ======
 RUN npm prune --production && npm cache clean --force
