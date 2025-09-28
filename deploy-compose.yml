@@ -16,7 +16,7 @@ services:
         target: /app/.env
       # sua config do app
       - type: bind
-        source: ./custom/librechat.yaml
+        source: /etc/dokploy/applications/librechat-app-hzk7e4/code/custom/librechat.yaml
         target: /app/config/librechat.yaml
       # estáticos/persistências opcionais
       - ./images:/app/client/public/images
