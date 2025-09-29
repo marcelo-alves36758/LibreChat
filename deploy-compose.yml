@@ -1,32 +1,46 @@
+version: "3.9"
+
 services:
   api:
     build:
       context: .
       dockerfile: Dockerfile
-      # (opcional) passe um build-arg para bust de cache quando mexer no CSS:
       # args:
       #   - THEME_SHA=${THEME_SHA:-dev}
-    restart: always
+    restart: unless-stopped
     ports:
-      - "3080:3080"
+      - "3080:3080"           # API do LibreChat
+    environment:
+      - NODE_ENV=production
+      - SANDBOX=true
+      - SANDBOX_URL=http://sandbox:3080  # API fala com o sandbox via rede interna
     volumes:
-      # seu .env do APP (contém MONGO_URI, MEILI_HOST, RAG_API_URL, etc.)
       - type: bind
         source: ./.env
         target: /app/.env
-      # sua config do app
       - type: bind
         source: /etc/dokploy/applications/librechat-app-hzk7e4/code/custom/librechat.yaml
         target: /app/config/librechat.yaml
-      # estáticos/persistências opcionais
       - ./images:/app/client/public/images
       - ./uploads:/app/uploads
       - ./logs:/app/api/logs
-    # se seus serviços externos só são resolvidos por host.docker.internal:
+    depends_on:
+      - sandbox
     # extra_hosts:
     #   - "host.docker.internal:host-gateway"
-    # se você usa nomes de serviço via rede externa compartilhada:
     # networks:
     #   default:
     #     external: true
     #     name: sua_rede_compartilhada
+
+  sandbox:
+    image: librechat/sandbox:latest
+    container_name: librechat_sandbox
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+    expose:
+      - "3080"                # expõe só na rede do compose (sem abrir porta no host)
+    # Se quiser acessar o sandbox diretamente do host para debug, descomente:
+    # ports:
+    #   - "3081:3080"
