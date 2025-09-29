@@ -1,20 +1,35 @@
+version: "3.9"
+
 services:
   api:
+    # Se você quer buildar sua imagem custom (com o hero.css), mantenha "build".
+    # Se preferir usar a imagem oficial, troque por:
+    # image: ghcr.io/danny-avila/librechat:latest
     build:
       context: .
       dockerfile: Dockerfile
-    restart: always
+      # args:
+      #   - THEME_SHA=${THEME_SHA:-dev}
+    restart: unless-stopped
     ports:
-      - "3080:3080"   # ajuste se 3080 já estiver ocupado
-    # NÃO repita aqui MONGO_URI/MEILI_HOST/etc. Se estão no .env do app, já basta.
+      - "3080:3080"         # expõe só a API do LibreChat
+    environment:
+      - NODE_ENV=production
+      # habilita o uso do sandbox dentro do LibreChat
+      - SANDBOX=true
+      # aponta para o serviço "sandbox" na rede do compose (NÃO use localhost aqui)
+      - SANDBOX_URL=http://sandbox:3080
+      # (opcional) se o LibreChat estiver atrás de proxy/reverse-proxy
+      # - TRUST_PROXY=true
     volumes:
-      # 1) .env do APLICATIVO dentro do container (LibreChat lê /app/.env)
+      # 1) injeta o .env do aplicativo dentro do container (LibreChat lê /app/.env)
       - type: bind
         source: ./.env
         target: /app/.env
 
-      # 2) sua config do LibreChat (hot-swap sem rebuild)
+      # 2) sua config do LibreChat (hot swap, sem rebuild)
       - type: bind
+        # AJUSTE este caminho se no Dokploy o repositório estiver noutra pasta
         source: ./custom/librechat.yaml
         target: /app/config/librechat.yaml
 
@@ -23,9 +38,28 @@ services:
       - ./uploads:/app/uploads
       - ./logs:/app/api/logs
 
-    # (Opcional) Se seus outros serviços estão em outra rede Docker e você usa nomes de serviço,
-    # adicione a mesma rede externa aqui:
+    depends_on:
+      - sandbox
+    # Caso seus bancos/filas (Mongo/Redis/Meili) estejam em outra rede Docker compartilhada:
     # networks:
     #   default:
     #     external: true
     #     name: sua_rede_compartilhada
+
+  sandbox:
+    image: librechat/sandbox:latest
+    container_name: librechat_sandbox
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      # (opcional) se quiser restringir CORS do sandbox, você pode expor variáveis aqui
+      # como SANDBOX_CORS_ORIGIN, dependendo da versão da imagem. Se não souber, deixe sem.
+    expose:
+      - "3080"              # só na rede interna do compose
+    # Se quiser acessar o sandbox diretamente do host para debug, descomente:
+    # ports:
+    #   - "3081:3080"
+
+# networks:
+#   default:
+#     name: librechat_net   # opcional: nomear a rede
