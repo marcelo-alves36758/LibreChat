@@ -60,10 +60,10 @@ interface:
   webSearch: true
   fileSearch: true
   runCode: true
-  hideEndpoints:
-    - openAI
-    - azureOpenAI
-    - custom
+#  hideEndpoints:
+#    - openAI
+#    - azureOpenAI
+ #   - custom
 
 # ================================
 # RATE LIMITS
