@@ -60,7 +60,8 @@ interface:
   webSearch: true
   fileSearch: true
   runCode: true
-#  hideEndpoints:
+  hideEndpoints:
+     - google
 #    - openAI
 #    - azureOpenAI
  #   - custom
