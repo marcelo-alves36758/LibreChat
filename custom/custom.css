@@ -642,47 +642,5 @@ background-color: transparent !important;
   box-shadow: none !important;
   background-color: transparent !important; /* mantém como estava */
 }
-/* === BOTÕES MOBILE (menu + novo chat) — harmonizados com o padrão LibreChat === */
-
-button[data-testid="mobile-header-new-chat-button"],
-button[aria-label="New chat"].m-1.inline-flex {
-  /* Tamanho iOS-friendly */
-  min-width: 48px;
-  min-height: 48px;
-  width: 48px;
-  height: 48px;
-  padding: 8px;
-
-  /* Estilo visual padrão do LibreChat */
-  border-radius: 0.75rem; /* ~ rounded-xl */
-  background-color: var(--surface-secondary); /* igual aos demais */
-  color: var(--text-primary);
-  border: 1px solid var(--border-light);
-
-  /* Sombra e transições */
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
-  transition: all 0.2s ease-in-out;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-
-  /* Melhora UX no iPhone */
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
-}
-
-/* Hover/Focus (consistente com botões principais) */
-button[data-testid="mobile-header-new-chat-button"]:hover,
-button[aria-label="New chat"].m-1.inline-flex:hover {
-  background-color: var(--surface-hover);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.08);
-}
-
-/* SVG interno deve seguir o padrão de 24x24 */
-button[data-testid="mobile-header-new-chat-button"] svg,
-button[aria-label="New chat"].m-1.inline-flex svg {
-  width: 24px;
-  height: 24px;
-}
 
 
