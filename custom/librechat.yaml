@@ -11,8 +11,8 @@ memory:
   personalize: true
   messageWindowSize: 10
   agent:
-    provider: "openAI"
-    model: "gpt-5-nano"
+    provider: "azureOpenAI"
+    model: "gpt-5-mini"
     instructions: |
       You are the Hero Memory Manager for Ero Copper.
       Your job is to extract, normalize, and update user memory succinctly and safely. 
@@ -99,14 +99,12 @@ endpoints:
     titleEndpoint: "azureOpenAI"          # garante que usa o endpoint 'agents' (Azure)
     titleModel: "gpt-5-mini"         # use o ID do modelo no grupo, não o nome do deployment
     summarize: true
-    summaryEndpoint: "agents"
+    summaryEndpoint: "azureOpenAI"
     summaryModel: "gpt-5-mini"
     streamRate: 70                   # (se você já adicionou antes, mantenha)
     titlePrompt: |
       Analyze this conversation and provide:
-      1. The detected language of the conversation
-      2. A concise title in the detected language (5 words or less, no punctuation or quotation)
-      3. Always provide a relevant emoji at the start of the title
+      A concise title in the detected language (5 words or less, no punctuation or quotation)
       {convo}
   agents:
     disableBuilder: false
