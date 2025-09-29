@@ -45,9 +45,6 @@ fileStrategy: "local"
 interface:
   title: 'Hero'
   customWelcome: "{{user.name}}, welcome to Hero! An Ero assisted intelligence model"
-  # CORRETO: Estas chaves ficam no nível principal
-  appTitle: "Hero - Ero AI Assistant"
-  customFooter: "Hero - Please always verify the answers | Sempre verifique as respostas."
   # Temporary chat retention period in hours (2 days = 48 hours)
   temporaryChatRetention: 48
   mcpServers:
@@ -173,18 +170,7 @@ endpoints:
             gpt-4o-mini:
               deploymentName: "hero-gpt-4o-mini"
               version: "2025-01-01-preview"
-            dall-e-3:
-              deploymentName: "hero-dalle-3"
-              version: "2024-02-01"
-            gpt-image-1:
-              deploymentName: "hero-gpt-image-1"
-              version: "2025-04-01-preview"
-            tts:
-              deploymentName: "hero-tts"
-              version: "2025-03-01-preview"
-            whisper:
-              deploymentName: "hero-whisper"
-              version: "2024-06-01"
+
         # --- Group 2: East US 2 (SECONDARY / FAILOVER) ---
         - group: "eastus2-models"
           baseURL: "https://openiahero2.openai.azure.com/"
@@ -202,15 +188,6 @@ endpoints:
             gpt-4o-mini:
               deploymentName: "hero-gpt4o-mini"
               version: "2025-01-01-preview"
-            dall-e-3:
-              deploymentName: "hero-dalle3"
-              version: "2024-02-01"
-            gpt-image-1:
-              deploymentName: "hero-gpt-image1"
-              version: "2025-04-01-preview"
-            text-embedding-3-small:
-              deploymentName: "hero-embedding-small"
-              version: "2023-05-15"
     custom:
       - name: "AzureVision"
         apiKey: "${AZURE_VISION_EASTUS2_API_KEY}"
@@ -230,26 +207,18 @@ endpoints:
           Ocp-Apim-Subscription-Key: "${AZURE_DOCINTEL_EASTUS2_API_KEY}"
       - name: "JinaDeepSearch"
         apiKey: "${JINA_API_KEY}"
-        baseURL: "${JINA_BASE_URL}"   # LibreChat acrescenta /chat/completions automaticamente
+        baseURL: "${JINA_BASE_URL}"   # ex.: https://deepsearch.jina.ai/v1
         iconURL: "https://jina.ai/favicon.ico"
         modelDisplayLabel: "DeepSearch"
         models:
-          # DeepSearch usa este model id; mantenha aqui para aparecer no seletor
           default: ["jina-deepsearch-v1"]
           fetch: false
-        # Títulos de conversas podem gerar uma segunda chamada; como o DeepSearch é mais
-        # "pesado", recomendo deixar desativado para performance
         titleConvo: false
-        # Se quiser forçar streaming em todas as chamadas (recomendado pelo Jina)
         addParams:
           stream: true
-        # Cabeçalhos; Authorization usa a env var
         headers:
           Authorization: "Bearer ${JINA_API_KEY}"
           Content-Type: "application/json"
-        # Normalmente NÃO precisa mexer nisso, pois a API é OpenAI-compatível;
-        # deixe aqui como referência caso algum provedor rejeite certos campos:
-        # dropParams: ["user", "frequency_penalty", "presence_penalty", "stop"]
 
 
 # ========================
