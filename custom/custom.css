@@ -642,5 +642,175 @@ background-color: transparent !important;
   box-shadow: none !important;
   background-color: transparent !important; /* mantém como estava */
 }
+/* ====================== MOBILE UX: MAXIMIZADO + SIDEBARS OFF-CANVAS ====================== */
+/* Variáveis utilitárias (larguras colapsadas e abertas) */
+:root {
+  --nav-collapsed: 20px;      /* “alça” tocável à esquerda */
+  --ctrl-collapsed: 0px;      /* ajuste p/ painel direito se quiser alça também (ex: 16-20px) */
+  --nav-open: 296px;          /* largura da sidebar quando aberta */
+  --ctrl-open: 320px;         /* largura do painel direito quando aberto */
+}
+
+/* Garantir fullscreen já aplicado anteriormente */
+html, body, #root, body > div[id], main { min-height: 100dvh; }
+#root, body > div[id], main { height: 100dvh; }
+@supports (-webkit-touch-callout: none) {
+  html, body, #root, body > div[id], main { height: -webkit-fill-available; min-height: -webkit-fill-available; }
+}
+
+/* Área central ocupa toda a largura, considerando a “alça” da esquerda */
+@media (max-width: 767px) {
+  html, body { overflow: hidden; } /* evita scroll duplo do body */
+  main, [data-testid='chat-container'] {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-left: var(--nav-collapsed);   /* deixa a alça visível */
+    margin-right: var(--ctrl-collapsed); /* opcional p/ painel direito */
+  }
+
+  /* ========== Sidebar esquerda (Histórico) como off-canvas com alça ==========
+     Requisitos: sem alterar HTML/JS. Usa :focus-within / :active / :has(*:focus)
+     para “abrir”. Qualquer foco dentro (ex: busca) mantém aberta. */
+  [data-testid='nav'], #chat-history-nav {
+    position: fixed !important;
+    z-index: 50 !important;
+    top: var(--safe-top, 0);
+    bottom: 0;
+    left: 0;
+    width: var(--nav-collapsed) !important;     /* alça estreita visível */
+    overflow: hidden !important;
+    background: var(--sidebar) !important;
+    border-right: 1px solid var(--sidebar-border) !important;
+    transition: width .22s ease, box-shadow .22s ease;
+    touch-action: manipulation; /* melhora toque */
+  }
+
+  /* “Abrir” por foco ou toque (qualquer interação interna) */
+  [data-testid='nav']:focus-within,
+  [data-testid='nav']:active,
+  [data-testid='nav']:has(*:focus),
+  #chat-history-nav:focus-within,
+  #chat-history-nav:active,
+  #chat-history-nav:has(*:focus) {
+    width: var(--nav-open) !important;
+    box-shadow: 0 0 0 9999px color-mix(in oklab, #000 30%, transparent) !important; /* backdrop */
+  }
+
+  /* Overlay clicável: usa pseudo-elemento para capturar toque fora e “fechar” */
+  [data-testid='nav']::after, #chat-history-nav::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    left: var(--nav-open); /* área fora do painel aberto */
+    pointer-events: none;  /* desativado por padrão */
+  }
+  [data-testid='nav']:focus-within::after,
+  [data-testid='nav']:has(*:focus)::after,
+  [data-testid='nav']:active::after,
+  #chat-history-nav:focus-within::after,
+  #chat-history-nav]:has(*:focus)::after,
+  #chat-history-nav:active::after {
+    pointer-events: auto;  /* permite toque fora p/ perder foco */
+  }
+
+  /* Evita que elementos internos “estourem” a largura quando fechado */
+  [data-testid='nav'] *, #chat-history-nav * { max-width: 100% !important; }
+
+  /* ========== Painel direito (Controles) como off-canvas (opcional) ========== */
+  #controls-nav {
+    position: fixed !important;
+    z-index: 50 !important;
+    top: var(--safe-top, 0);
+    bottom: 0;
+    right: 0;
+    width: var(--ctrl-collapsed) !important; /* 0 = sem alça; coloque 16-20px se quiser alça */
+    overflow: hidden !important;
+    background: var(--sidebar) !important;
+    border-left: 1px solid var(--sidebar-border) !important;
+    transition: width .22s ease, box-shadow .22s ease;
+  }
+  #controls-nav:focus-within,
+  #controls-nav:active,
+  #controls-nav:has(*:focus) {
+    width: var(--ctrl-open) !important;
+    box-shadow: 0 0 0 9999px color-mix(in oklab, #000 30%, transparent) !important;
+  }
+  #controls-nav::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    right: var(--ctrl-open);
+    pointer-events: none;
+  }
+  #controls-nav:focus-within::after,
+  #controls-nav:has(*:focus)::after,
+  #controls-nav:active::after {
+    pointer-events: auto;
+  }
+
+  /* ========== Área de mensagens: rola dentro, composer “aderente” ao fundo ========== */
+  [data-testid='chat'],
+  [data-testid='chat-messages'],
+  main [data-testid='messages'],
+  main .overflow-y-auto {
+    display: flex;
+    flex-direction: column;
+    min-height: 0 !important;
+    max-height: 100% !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Composer fixo/aderente com safe-area nos iPhones */
+  .relative.flex.w-full.flex-grow.flex-col.border:has(#prompt-textarea) {
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
+    background: var(--surface-chat) !important;
+    padding-bottom: max(0.5rem, env(safe-area-inset-bottom, 0px)) !important;
+  }
+}
+
+/* ====================== MOBILE A11Y: TIPOGRAFIA + ALVOS DE TOQUE ====================== */
+@media (max-width: 767px) {
+  /* Base 16px melhora legibilidade e o zoom do iOS não dispara */
+  :root { --font-size: 16px; }
+  html { font-size: var(--font-size); }
+  .prose { font-size: 1.0625rem; line-height: 1.55; } /* ~17px no corpo da mensagem */
+  :where(h1,h2,h3,h4,h5,h6) { letter-spacing: -0.01em; }
+
+  /* Alvos de toque mínimos (44px) para botões e inputs */
+  button, [role="button"], .btn, .icon-button {
+    min-height: 44px !important;
+    min-width: 44px !important;
+  }
+  input[type='text'], input[type='search'], textarea, select, #prompt-textarea {
+    min-height: 44px !important;
+    font-size: 1rem !important; /* evita zoom forçado do iOS */
+  }
+
+  /* Ícones SVG dentro de botões ligeiramente maiores para mobile */
+  button svg, [role="button"] svg, .btn svg, .icon-button svg {
+    width: 22px !important;
+    height: 22px !important;
+    flex-shrink: 0;
+  }
+}
+
+/* ====================== DETALHES: ROLAR TABELAS/IMAGENS NO CELULAR ====================== */
+@media (max-width: 767px) {
+  .markdown.prose.message-content :is(img, table) { max-width: 100% !important; }
+  .markdown.prose.message-content table {
+    display: block !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* ====================== REFINOS iOS: SCROLLBARS e SUAVIDADE ====================== */
+@supports (-webkit-touch-callout: none) {
+  .dark ::-webkit-scrollbar, :root:not(.dark) ::-webkit-scrollbar { width: 3px; height: 3px; }
+}
+
 
 
