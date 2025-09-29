@@ -212,7 +212,7 @@ endpoints:
           Ocp-Apim-Subscription-Key: "${AZURE_DOCINTEL_EASTUS2_API_KEY}"
       - name: "JinaDeepSearch"
         apiKey: "${JINA_API_KEY}"
-        baseURL: "${JINA_BASE_URL}"   # ex.: https://deepsearch.jina.ai/v1
+        baseURL: "${JINA_BASE_URL}"     # ex.: https://deepsearch.jina.ai/v1
         iconURL: "https://jina.ai/favicon.ico"
         modelDisplayLabel: "DeepSearch"
         models:
@@ -224,7 +224,6 @@ endpoints:
         headers:
           Authorization: "Bearer ${JINA_API_KEY}"
           Content-Type: "application/json"
-
 
 # ========================
 # Model Catalog (Agent List)
