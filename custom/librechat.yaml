@@ -142,7 +142,7 @@ endpoints:
 # ARQUIVO DE CONFIGURAÇÃO FINAL 
 # ===================================================================
     azureOpenAI:
-      titleModel: "gpt-4o"
+      titleModel: "hero-gpt-5-mini"
       assistants: true
       embeddings:
         deploymentName: "hero-text-embedding-3-small"   # Sweden Central
