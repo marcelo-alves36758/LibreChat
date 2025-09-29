@@ -96,10 +96,12 @@ ocr:
 endpoints:
   all:
     titleConvo: true
-    titleModel: "hero-gpt-5-mini"
+    titleEndpoint: "agents"          # garante que usa o endpoint 'agents' (Azure)
+    titleModel: "gpt-5-mini"         # use o ID do modelo no grupo, não o nome do deployment
     summarize: true
-    summaryModel: "hero-gpt-5-mini"
-    streamRate: 70
+    summaryEndpoint: "agents"
+    summaryModel: "gpt-5-mini"
+    streamRate: 70                   # (se você já adicionou antes, mantenha)
     titlePrompt: |
       Analyze this conversation and provide:
       1. The detected language of the conversation
