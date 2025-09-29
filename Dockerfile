@@ -1,4 +1,4 @@
-# Dockerfile — LibreChat FE+BE (compatível) substitui style.css por custom/hero.css + sanitização
+# Dockerfile — LibreChat FE+BE (injeta custom.css no HTML, sem tocar no style.css)
 FROM node:20-alpine AS base
 WORKDIR /app
 
@@ -19,6 +19,7 @@ COPY packages/api/package.json ./packages/api/package.json
 # Configuração do backend (custom config)
 COPY custom/librechat.yaml /app/librechat.yaml
 
+# Instala dependências
 RUN npm ci --no-audit
 
 # Asserção: config deve existir
@@ -29,32 +30,39 @@ RUN test -f /app/librechat.yaml \
 # Código do projeto (inclui /custom)
 COPY . .
 
-# ====== Substituição do CSS base (pré-build) ======
-# Fonte: custom/hero.css (ou custom/style.css fallback)
-# Alvos (ordem): client/src/style.css, client/src/hero.css, packages/client/src/styles/style.css
+# ====== Incluir custom.css via <link> no index.html (sem sobrescrever style.css) ======
+# Procura o CSS em ordem: custom/custom.css, custom/hero.css, custom/style.css
+# Copia para public/custom.css e injeta <link ...> antes de </head> no index.html
 RUN set -e; \
-  if [ -f /app/custom/hero.css ]; then SRC="/app/custom/hero.css"; \
-  elif [ -f /app/custom/style.css ]; then SRC="/app/custom/style.css"; \
-  else echo "ERRO: nem /app/custom/hero.css nem /app/custom/style.css encontrados"; exit 1; fi; \
-  echo ">> CSS fonte: $SRC"; \
-  TARGETS='/app/client/src/style.css /app/client/src/hero.css /app/packages/client/src/styles/style.css'; \
-  REPLACED=0; \
-  for T in $TARGETS; do \
-    if [ -f "$T" ]; then \
-      echo ">> Substituindo $T por $SRC"; \
-      cp "$SRC" "$T"; \
-      # Sanitização leve (opcional; você já removeu especiais)
-      sed -i 's/\r$//' "$T" || true; \
-      sed -i '1s/^\xEF\xBB\xBF//' "$T" || true; \
-      REPLACED=1; \
-    fi; \
+  SRC=""; \
+  for C in /app/custom/custom.css /app/custom/hero.css /app/custom/style.css; do \
+    if [ -f "$C" ]; then SRC="$C"; break; fi; \
   done; \
-  if [ $REPLACED -eq 0 ]; then \
-    echo "ERRO: nenhum alvo de CSS encontrado nos caminhos conhecidos."; \
-    echo "Verifique onde está o stylesheet principal no seu fork e ajuste o Dockerfile."; \
+  if [ -z "$SRC" ]; then \
+    echo "ERRO: não encontrei /app/custom/custom.css (ou hero.css/style.css)."; \
     exit 1; \
   fi; \
-  echo ">> Primeiras linhas do CSS aplicado:"; head -n 12 "$SRC"
+  echo ">> Usando CSS fonte: $SRC"; \
+  FOUND_HTML=0; \
+  for D in /app/client /app/packages/client; do \
+    if [ -f "$D/index.html" ]; then \
+      FOUND_HTML=1; \
+      mkdir -p "$D/public"; \
+      cp "$SRC" "$D/public/custom.css"; \
+      # Injeta apenas se ainda não houver referência a /custom.css
+      if ! grep -q '/custom.css' "$D/index.html"; then \
+        echo ">> Injetando <link> em $D/index.html"; \
+        sed -i "s#</head>#  <link rel=\"stylesheet\" href=\"/custom.css\" />\n</head>#I" "$D/index.html"; \
+      else \
+        echo ">> Link para /custom.css já existe em $D/index.html (nada a fazer)"; \
+      fi; \
+    fi; \
+  done; \
+  if [ $FOUND_HTML -eq 0 ]; then \
+    echo "ERRO: index.html não encontrado em /app/client ou /app/packages/client."; \
+    exit 1; \
+  fi; \
+  echo '>> custom.css copiado para public/ e link injetado com sucesso.'
 
 # ====== Build do client ======
 ENV NODE_OPTIONS="--max-old-space-size=2048"
