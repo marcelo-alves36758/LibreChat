@@ -1,4 +1,4 @@
-# Dockerfile — LibreChat FE+BE (substitui style.css por custom/hero.css)
+# Dockerfile — LibreChat FE+BE (injeta custom.css como último CSS)
 FROM node:20-alpine AS base
 WORKDIR /app
 
@@ -30,34 +30,44 @@ RUN test -f /app/librechat.yaml \
 # Código do projeto (inclui /custom)
 COPY . .
 
-# ====== Substituir style.css pelo hero.css (design refeito) ======
-# Procura style.css nas bases conhecidas e sobrescreve com /custom/hero.css
+# ====== Injeta custom.css no build do frontend (sem tocar no style.css) ======
+# Coloca custom.css em client/public para ser copiado ao dist
 RUN set -e; \
-  HERO_SRC="/app/custom/hero.css"; \
-  if [ ! -f "$HERO_SRC" ]; then \
-    echo "ERRO: custom/hero.css não encontrado. Coloque seu CSS em /custom/hero.css"; \
+  CUSTOM_SRC="/app/custom/custom.css"; \
+  PUB_DIR="/app/client/public"; \
+  if [ ! -f "$CUSTOM_SRC" ]; then \
+    echo "ERRO: custom/custom.css não encontrado. Coloque seu CSS em /custom/custom.css"; \
     exit 1; \
   fi; \
-  FOUND_CSS=0; \
-  for D in /app/client /app/packages/client; do \
-    for TARGET in "$D/src/style.css" "$D/style.css" "$D/src/styles.css"; do \
-      if [ -f "$TARGET" ]; then \
-        echo ">> Substituindo $TARGET por $HERO_SRC"; \
-        cp "$HERO_SRC" "$TARGET"; \
-        FOUND_CSS=1; \
-      fi; \
-    done; \
-  done; \
-  if [ $FOUND_CSS -eq 0 ]; then \
-    echo "ERRO: style.css não encontrado em /app/client ou /app/packages/client."; \
-    echo "Verifique o caminho do CSS do frontend e ajuste o bloco de substituição se necessário."; \
-    exit 1; \
-  fi; \
-  echo '>> style.css substituído com sucesso pelo custom/hero.css.'
+  mkdir -p "$PUB_DIR"; \
+  cp "$CUSTOM_SRC" "$PUB_DIR/custom.css"; \
+  echo ">> custom.css copiado para client/public/ (entrará no build)."
 
 # ====== Build do client ======
 ENV NODE_OPTIONS="--max-old-space-size=2048"
 RUN npm run frontend
+
+# ====== Garante custom.css no dist e injeta como último CSS ======
+RUN set -e; \
+  DIST_DIR="/app/client/dist"; \
+  INDEX_HTML="$DIST_DIR/index.html"; \
+  # Alguns toolchains podem mover assets; garanta que exista em /dist/
+  if [ ! -f "$DIST_DIR/custom.css" ]; then \
+    if [ -f "/app/client/public/custom.css" ]; then \
+      cp "/app/client/public/custom.css" "$DIST_DIR/custom.css"; \
+    else \
+      echo "ERRO: custom.css não encontrado após build"; exit 1; \
+    fi; \
+  fi; \
+  # Injeta link imediatamente antes de </head> (último CSS na página)
+  if [ -f "$INDEX_HTML" ]; then \
+    echo ">> Injetando <link rel=\"stylesheet\" href=\"/custom.css?v=$THEME_SHA\"> no dist/index.html"; \
+    sed -i '/<\/head>/i \ \ <link rel="stylesheet" href="/custom.css?v='"$THEME_SHA"'" />' "$INDEX_HTML"; \
+  else \
+    echo "ERRO: dist/index.html não encontrado. Verifique o comando de build do frontend."; \
+    exit 1; \
+  fi; \
+  echo '>> custom.css injetado com sucesso como último CSS.'
 
 # ====== Compat extra: stub de auth.json (silencia ENOENT sem impactar env/yaml) ======
 RUN mkdir -p /app/api/data && \
