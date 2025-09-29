@@ -1,4 +1,4 @@
-# Dockerfile — LibreChat FE+BE (injeta custom.css no HTML, sem tocar no style.css)
+# Dockerfile — LibreChat FE+BE (substitui style.css por custom/hero.css)
 FROM node:20-alpine AS base
 WORKDIR /app
 
@@ -30,39 +30,30 @@ RUN test -f /app/librechat.yaml \
 # Código do projeto (inclui /custom)
 COPY . .
 
-# ====== Incluir custom.css via <link> no index.html (sem sobrescrever style.css) ======
-# Procura o CSS em ordem: custom/custom.css, custom/hero.css, custom/style.css
-# Copia para public/custom.css e injeta <link ...> antes de </head> no index.html
+# ====== Substituir style.css pelo hero.css (design refeito) ======
+# Procura style.css nas bases conhecidas e sobrescreve com /custom/hero.css
 RUN set -e; \
-  SRC=""; \
-  for C in /app/custom/custom.css /app/custom/hero.css /app/custom/style.css; do \
-    if [ -f "$C" ]; then SRC="$C"; break; fi; \
-  done; \
-  if [ -z "$SRC" ]; then \
-    echo "ERRO: não encontrei /app/custom/custom.css (ou hero.css/style.css)."; \
+  HERO_SRC="/app/custom/hero.css"; \
+  if [ ! -f "$HERO_SRC" ]; then \
+    echo "ERRO: custom/hero.css não encontrado. Coloque seu CSS em /custom/hero.css"; \
     exit 1; \
   fi; \
-  echo ">> Usando CSS fonte: $SRC"; \
-  FOUND_HTML=0; \
+  FOUND_CSS=0; \
   for D in /app/client /app/packages/client; do \
-    if [ -f "$D/index.html" ]; then \
-      FOUND_HTML=1; \
-      mkdir -p "$D/public"; \
-      cp "$SRC" "$D/public/custom.css"; \
-      # Injeta apenas se ainda não houver referência a custom.css
-      if ! grep -Eq '/custom\.css|%BASE_URL%custom\.css' "$D/index.html"; then \
-        echo ">> Injetando <link> em $D/index.html"; \
-        sed -i "s#</head>#  <link rel=\"stylesheet\" href=\"%BASE_URL%custom.css\" />\n</head>#I" "$D/index.html"; \
-      else \
-        echo ">> Link para custom.css já existe em $D/index.html (nada a fazer)"; \
+    for TARGET in "$D/src/style.css" "$D/style.css" "$D/src/styles.css"; do \
+      if [ -f "$TARGET" ]; then \
+        echo ">> Substituindo $TARGET por $HERO_SRC"; \
+        cp "$HERO_SRC" "$TARGET"; \
+        FOUND_CSS=1; \
       fi; \
-    fi; \
+    done; \
   done; \
-  if [ $FOUND_HTML -eq 0 ]; then \
-    echo "ERRO: index.html não encontrado em /app/client ou /app/packages/client."; \
+  if [ $FOUND_CSS -eq 0 ]; then \
+    echo "ERRO: style.css não encontrado em /app/client ou /app/packages/client."; \
+    echo "Verifique o caminho do CSS do frontend e ajuste o bloco de substituição se necessário."; \
     exit 1; \
   fi; \
-  echo '>> custom.css copiado para public/ e link injetado com sucesso.'
+  echo '>> style.css substituído com sucesso pelo custom/hero.css.'
 
 # ====== Build do client ======
 ENV NODE_OPTIONS="--max-old-space-size=2048"
