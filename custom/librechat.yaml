@@ -85,10 +85,12 @@ rateLimits:
 # OCR
 # ================================
 #ocr:
-#  mistralModel: "${OCR_DEPLOYMENT_NAME}" 
-#  apiKey: "${OCR_API_KEY}"
-#  baseURL: "${OCR_BASEURL}"
-#  strategy: "azure_mistral_ocr"
+ocr:
+  mistralModel: "mistral-document-ai-2505"  # seu deployment no Azure AI
+  apiKey: "${AZURE_MISTRAL_OCR_API_KEY}"
+  baseURL: "https://friaerohero.services.ai.azure.com/providers/mistral/azure/ocr"
+  strategy: "azure_mistral_ocr"
+
 
 
 # ========================
@@ -136,89 +138,90 @@ endpoints:
         providers:
           - openai_images
           - dalle
+# ===================================================================
+# ARQUIVO DE CONFIGURAÇÃO FINAL 
+# ===================================================================
+    azureOpenAI:
+      titleModel: "gpt-4o"
+      assistants: true
+      embeddings:
+        deploymentName: "hero-text-embedding-3-small"   # Sweden Central
+        version: "2023-05-15"
+      groups:
+        # --- Group 1: Sweden Central (PRIMARY) ---
+        - group: "sweden-central-models"
+          baseURL: "https://hero-openia-sw.openai.azure.com/"
+          apiKey: "${AZURE_API_KEY}"                     # from .env (Sweden)
+          models:
+            gpt-5:
+              deploymentName: "hero-gpt-5"
+              version: "2025-04-01-preview"
+            gpt-5-mini:
+              deploymentName: "hero-gpt-5-mini"
+              version: "2025-04-01-preview"
+            gpt-4o:
+              deploymentName: "hero-gpt-4o"
+              version: "2025-01-01-preview"
+            gpt-4o-mini:
+              deploymentName: "hero-gpt-4o-mini"
+              version: "2025-01-01-preview"
+            dall-e-3:
+              deploymentName: "hero-dalle-3"
+              version: "2024-02-01"
+            gpt-image-1:
+              deploymentName: "hero-gpt-image-1"
+              version: "2025-04-01-preview"
+            tts:
+              deploymentName: "hero-tts"
+              version: "2025-03-01-preview"
+            whisper:
+              deploymentName: "hero-whisper"
+              version: "2024-06-01"
+        # --- Group 2: East US 2 (SECONDARY / FAILOVER) ---
+        - group: "eastus2-models"
+          baseURL: "https://openiahero2.openai.azure.com/"
+          apiKey: "${CUSTOM_AZURE2_API_KEY}"             # from .env (East US 2)
+          models:
+            gpt-5:
+              deploymentName: "gpt-5"
+              version: "2025-04-01-preview"
+            gpt-5-mini:
+              deploymentName: "hero-gpt5-mini"
+              version: "2025-04-01-preview"
+            gpt-4o:
+              deploymentName: "hero-gpt4o"
+              version: "2025-01-01-preview"
+            gpt-4o-mini:
+              deploymentName: "hero-gpt4o-mini"
+              version: "2025-01-01-preview"
+            dall-e-3:
+              deploymentName: "hero-dalle3"
+              version: "2024-02-01"
+            gpt-image-1:
+              deploymentName: "hero-gpt-image1"
+              version: "2025-04-01-preview"
+            text-embedding-3-small:
+              deploymentName: "hero-embedding-small"
+              version: "2023-05-15"
+    custom:
+      - name: "AzureVision"
+        apiKey: "${AZURE_VISION_EASTUS2_API_KEY}"
+        baseURL: "https://hero-aivision.cognitiveservices.azure.com/computervision/imageanalysis:analyze?api-version=2024-02-01&features=read"
+        directEndpoint: true
+        models:
+          default: ["vision-analyze"]
+        headers:
+          Ocp-Apim-Subscription-Key: "${AZURE_VISION_EASTUS2_API_KEY}"
+      - name: "AzureDocIntel"
+        apiKey: "${AZURE_DOCINTEL_EASTUS2_API_KEY}"
+        baseURL: "https://hero-docintel.cognitiveservices.azure.com/documentintelligence/documentModels/prebuilt-read:analyze?api-version=2024-02-29-preview"
+        directEndpoint: true
+        models:
+          default: ["docintel-read"]
+        headers:
+          Ocp-Apim-Subscription-Key: "${AZURE_DOCINTEL_EASTUS2_API_KEY}"
 
 
-# ===================================================================
-# ARQUIVO DE CONFIGURAÇÃO FINAL (Desativado por padrão)
-# ===================================================================
-# # --- CONFIGURAÇÃO DOS MODELOS AZURE OPENAI ---
-# azureOpenAI:
-#   titleModel: "gpt-4o"
-#   assistants: true
-#   embeddings:
-#     deploymentName: "hero-embedding-small"
-#     version: "2023-05-15"
-#   groups:
-#     # --- Grupo 1: Modelos da Região Sweden Central (PRINCIPAL) ---
-#     - group: "sweden-central-models"
-#       baseURL: "${AZURE_OPENAI_ENDPOINT}"
-#       apiKey: "${AZURE_OPENAI_API_KEY}"
-#       models:
-#         gpt-5:
-#           deploymentName: "hero-gpt-5"
-#           version: "2025-04-01-preview"
-#         gpt-5-mini:
-#           deploymentName: "hero-gpt-5-mini"
-#           version: "2025-04-01-preview"
-#         gpt-4o:
-#           deploymentName: "hero-gpt-4o"
-#           version: "2025-04-01-preview"
-#         gpt-4o-mini:
-#           deploymentName: "hero-gpt-4o-mini"
-#           version: "2025-01-01-preview"
-#         dall-e-3:
-#           deploymentName: "hero-dalle-3"
-#           version: "2024-02-01"
-#         gpt-image-1:
-#           deploymentName: "hero-gpt-image-1"
-#           version: "2025-04-01-preview"
-#         tts:
-#           deploymentName: "hero-tts"
-#           version: "2025-03-01-preview"
-#     # --- Grupo 2: Modelos da Região East US 2 (SECUNDÁRIO) ---
-#     - group: "eastus2-models"
-#       baseURL: "${AZURE_OPENAI_EASTUS2_ENDPOINT}"
-#       apiKey: "${AZURE_OPENAI_EASTUS2_API_KEY}"
-#       models:
-#         gpt-5:
-#           deploymentName: "gpt-5"
-#           version: "2025-04-01-preview"
-#         gpt-5-mini:
-#           deploymentName: "hero-gpt5-mini"
-#           version: "2025-04-01-preview"
-#         gpt-4o:
-#           deploymentName: "hero-gpt4o"
-#           version: "2025-01-01-preview"
-#         gpt-4o-mini:
-#           deploymentName: "hero-gpt4o-mini"
-#           version: "2025-01-01-preview"
-#         text-embedding-3-small:
-#           deploymentName: "hero-embedding-small"
-#           version: "2023-05-15"
-#   # TIPO DE ENDPOINT: Databricks
-#   # Seção dedicada para modelos servidos pelo Databricks.
-#   databricks:
-#     title: "Databricks"
-#     apiKey: "${DATABRICKS_API_KEY}"
-#     baseURL: "${DATABRICKS_BASE_URL}"
-#     models:
-#       "databricks/dbrx-instruct":
-#         maxOutputTokens: 16384
-#       "databricks/llama-3-70b-instruct":
-#         maxOutputTokens: 8192
-#   # TIPO DE ENDPOINT: Ferramentas Customizadas
-#   # Seção para ferramentas que os agentes podem usar (ex: Azure Cognitive Services).
-#   custom:
-#     - name: "AzureVision"
-#       baseURL: "https://hero-aivision.cognitiveservices.azure.com/computervision/imageanalysis:analyze?api-version=2024-02-01&features=read"
-#       apiKey: "${AZURE_VISION_EASTUS2_API_KEY}"
-#       headers:
-#         Ocp-Apim-Subscription-Key: "${AZURE_VISION_EASTUS2_API_KEY}"
-#     - name: "AzureDocIntel"
-#       baseURL: "https://hero-docintel.cognitiveservices.azure.com/documentintelligence/documentModels/prebuilt-read:analyze?api-version=2024-02-29-preview"
-#       apiKey: "${AZURE_DOCINTEL_EASTUS2_API_KEY}"
-#       headers:
-#         Ocp-Apim-Subscription-Key: "${AZURE_DOCINTEL_EASTUS2_API_KEY}"
 
 # ========================
 # Model Catalog (Agent List)
@@ -308,11 +311,18 @@ speech:
       playbackRate: 1.0
       cacheTTS: true
   stt:
-    openai:
-      apiKey: '${STT_API_KEY}'
-      model: 'whisper-1'
+    azureOpenAI:
+      instanceName: "hero-openia-sw"
+      apiKey: "${AZURE_API_KEY}"
+      deploymentName: "hero-whisper"
+      apiVersion: "2024-06-01"
+
   tts:
-    openai:
-      apiKey: '${TTS_API_KEY}'
-      model: 'tts-1'
+    azureOpenAI:
+      instanceName: "hero-openia-sw"
+      apiKey: "${AZURE_API_KEY}"
+      deploymentName: "hero-tts"
+      apiVersion: "2025-03-01-preview"
+      model: "tts-1"
       voices: ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer']
+
