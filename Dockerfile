@@ -52,7 +52,7 @@ RUN set -e; \
       # Injeta apenas se ainda não houver referência a /custom.css
       if ! grep -q '/custom.css' "$D/index.html"; then \
         echo ">> Injetando <link> em $D/index.html"; \
-        sed -i "s#</head>#  <link rel=\"stylesheet\" href=\"/custom.css\" />\n</head>#I" "$D/index.html"; \
+        sed -i "s#</head>#  <link rel=\"stylesheet\" href=\"%BASE_URL%custom.css\" />\n</head>#I" "$D/index.html";
       else \
         echo ">> Link para /custom.css já existe em $D/index.html (nada a fazer)"; \
       fi; \
