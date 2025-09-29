@@ -811,6 +811,118 @@ html, body, #root, body > div[id], main { min-height: 100dvh; }
 @supports (-webkit-touch-callout: none) {
   .dark ::-webkit-scrollbar, :root:not(.dark) ::-webkit-scrollbar { width: 3px; height: 3px; }
 }
+/* ====================== MOBILE TOOLBAR / HERO CHIPS ====================== */
+@media (max-width: 767px) {
+  /* Barra do topo: mantém tudo em uma linha, sem quebra */
+  .sticky.top-0,
+  .sticky.-top-1 {
+    display: block;
+  }
+  .sticky.top-0 .flex.items-center,
+  .sticky.-top-1 .flex.items-center,
+  .sticky.top-0 .flex.items-center.justify-between,
+  .sticky.-top-1 .flex.items-center.justify-between {
+    display: flex !important;
+    flex-wrap: nowrap !important;      /* não quebra linha */
+    align-items: center !important;
+    gap: 0.5rem !important;
+    min-height: 48px !important;
+    overflow: hidden !important;        /* evita “pular” layout */
+  }
+
+  /* Todo botão/anchor do topo não encolhe */
+  .sticky.top-0 :is(button, a[role="button"]),
+  .sticky.-top-1 :is(button, a[role="button"]) {
+    flex: 0 0 auto !important;
+  }
+
+  /* Título/label (ex.: "New Chat") pode encurtar com reticências */
+  .sticky.top-0 .truncate,
+  .sticky.-top-1 .truncate,
+  .sticky.top-0 .text-ellipsis,
+  .sticky.-top-1 .text-ellipsis {
+    min-width: 0 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  /* Grupo dos chips (Hero, etc.) não quebra e rola horizontal se faltar espaço */
+  .sticky.top-0 .flex.items-center > .flex,
+  .sticky.-top-1 .flex.items-center > .flex {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    gap: 0.5rem !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .sticky.top-0 .flex.items-center > .flex::-webkit-scrollbar,
+  .sticky.-top-1 .flex.items-center > .flex::-webkit-scrollbar { display: none; }
+
+  /* Chips “Hero” com alvo confortável */
+  .sticky.top-0 :is(button, a[role="button"]).rounded-lg,
+  .sticky.-top-1 :is(button, a[role="button"]).rounded-lg {
+    min-height: 40px !important;
+    padding: 0.375rem 0.625rem !important;
+    border-radius: 0.75rem !important;
+  }
+
+  /* Ícones do topo maiores e uniformes */
+  .sticky.top-0 :is(button, a[role="button"]) svg,
+  .sticky.-top-1 :is(button, a[role="button"]) svg {
+    width: 24px !important;
+    height: 24px !important;
+    flex-shrink: 0 !important;
+  }
+}
+
+/* ====================== “NEW CHAT / NEW MESSAGE” (MOBILE) ====================== */
+/* Cobre os casos comuns: botão com texto “New Chat/Message”, ícone de plus, etc. */
+@media (max-width: 767px) {
+  /* Tamanho do alvo */
+  [data-testid*="new"],
+  [aria-label*="new" i],
+  a[href*="new"],
+  button:has(svg[aria-label*="plus" i]),
+  button:has(.lucide-plus),
+  button:has(svg[width][height][viewBox*="24"]) {
+    min-height: 48px !important;
+    min-width: 48px !important;
+    padding: 0.5rem 0.75rem !important;
+    border-radius: 9999px !important;   /* pill/FAB */
+    font-size: 1rem !important;         /* ~16px */
+    line-height: 1.2 !important;
+  }
+
+  /* Ícone “+” visível e no padrão 24px */
+  [data-testid*="new"] svg,
+  [aria-label*="new" i] svg,
+  a[href*="new"] svg,
+  button:has(svg[aria-label*="plus" i]) svg,
+  button:has(.lucide-plus) svg {
+    width: 24px !important;
+    height: 24px !important;
+  }
+}
+
+/* ====================== LINHA ÚNICA GARANTIDA (ANTI-WRAP GLOBAL DO HEADER) ====================== */
+@media (max-width: 767px) {
+  /* Se existir um container extra, não deixar quebrar */
+  .sticky.top-0 .flex-nowrap,
+  .sticky.-top-1 .flex-nowrap { flex-wrap: nowrap !important; }
+
+  /* Qualquer gap vertical exagerado no header vira mínimo */
+  .sticky.top-0 .gap-2, .sticky.top-0 .gap-3,
+  .sticky.-top-1 .gap-2, .sticky.-top-1 .gap-3 { gap: 0.5rem !important; }
+}
+
+/* ====================== TIPOGRAFIA MOBILE UM POUCO MAIOR ====================== */
+@media (max-width: 767px) {
+  :root { --font-size: 16px !important; }  /* base */
+  html { font-size: var(--font-size) !important; }
+  .prose { font-size: 1.0625rem !important; line-height: 1.55 !important; } /* ~17px */
+}
 
 
 
