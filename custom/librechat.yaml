@@ -220,7 +220,28 @@ endpoints:
           default: ["docintel-read"]
         headers:
           Ocp-Apim-Subscription-Key: "${AZURE_DOCINTEL_EASTUS2_API_KEY}"
-
+      - name: "JinaDeepSearch"
+        apiKey: "${JINA_API_KEY}"
+        baseURL: "${JINA_BASE_URL}"   # LibreChat acrescenta /chat/completions automaticamente
+        iconURL: "https://jina.ai/favicon.ico"
+        modelDisplayLabel: "DeepSearch"
+        models:
+          # DeepSearch usa este model id; mantenha aqui para aparecer no seletor
+          default: ["jina-deepsearch-v1"]
+          fetch: false
+        # Títulos de conversas podem gerar uma segunda chamada; como o DeepSearch é mais
+        # "pesado", recomendo deixar desativado para performance
+        titleConvo: false
+        # Se quiser forçar streaming em todas as chamadas (recomendado pelo Jina)
+        addParams:
+          stream: true
+        # Cabeçalhos; Authorization usa a env var
+        headers:
+          Authorization: "Bearer ${JINA_API_KEY}"
+          Content-Type: "application/json"
+        # Normalmente NÃO precisa mexer nisso, pois a API é OpenAI-compatível;
+        # deixe aqui como referência caso algum provedor rejeite certos campos:
+        # dropParams: ["user", "frequency_penalty", "presence_penalty", "stop"]
 
 
 # ========================
