@@ -96,7 +96,7 @@ ocr:
 endpoints:
   all:
     titleConvo: true
-    titleEndpoint: "agents"          # garante que usa o endpoint 'agents' (Azure)
+    titleEndpoint: "azureOpenAI"          # garante que usa o endpoint 'agents' (Azure)
     titleModel: "gpt-5-mini"         # use o ID do modelo no grupo, não o nome do deployment
     summarize: true
     summaryEndpoint: "agents"
