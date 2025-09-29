@@ -97,6 +97,9 @@ endpoints:
   all:
     titleConvo: true
     titleModel: "hero-gpt-5-mini"
+    summarize: true
+    summaryModel: "hero-gpt-5-mini"
+    streamRate: 70
     titlePrompt: |
       Analyze this conversation and provide:
       1. The detected language of the conversation
