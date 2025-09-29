@@ -97,6 +97,15 @@ ocr:
 # Endpoints (Global Tool Config)
 # ========================
 endpoints:
+  all:
+    titleConvo: true
+    titleModel: "hero-gpt-5-mini"
+    titlePrompt: |
+      Analyze this conversation and provide:
+      1. The detected language of the conversation
+      2. A concise title in the detected language (5 words or less, no punctuation or quotation)
+      3. Always provide a relevant emoji at the start of the title
+      {convo}
   agents:
     disableBuilder: false
     recursionLimit: 50
@@ -142,7 +151,6 @@ endpoints:
 # ARQUIVO DE CONFIGURAÇÃO FINAL 
 # ===================================================================
     azureOpenAI:
-      titleModel: "hero-gpt-5-mini"
       assistants: true
       embeddings:
         deploymentName: "hero-text-embedding-3-small"   # Sweden Central
