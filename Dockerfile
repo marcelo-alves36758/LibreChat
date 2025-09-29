@@ -49,12 +49,12 @@ RUN set -e; \
       FOUND_HTML=1; \
       mkdir -p "$D/public"; \
       cp "$SRC" "$D/public/custom.css"; \
-      # Injeta apenas se ainda não houver referência a /custom.css
-      if ! grep -q '/custom.css' "$D/index.html"; then \
+      # Injeta apenas se ainda não houver referência a custom.css
+      if ! grep -Eq '/custom\.css|%BASE_URL%custom\.css' "$D/index.html"; then \
         echo ">> Injetando <link> em $D/index.html"; \
-        sed -i "s#</head>#  <link rel=\"stylesheet\" href=\"%BASE_URL%custom.css\" />\n</head>#I" "$D/index.html";
+        sed -i "s#</head>#  <link rel=\"stylesheet\" href=\"%BASE_URL%custom.css\" />\n</head>#I" "$D/index.html"; \
       else \
-        echo ">> Link para /custom.css já existe em $D/index.html (nada a fazer)"; \
+        echo ">> Link para custom.css já existe em $D/index.html (nada a fazer)"; \
       fi; \
     fi; \
   done; \
