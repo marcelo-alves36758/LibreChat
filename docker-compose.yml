@@ -19,11 +19,11 @@ services:
       - SANDBOX=true
       - SANDBOX_URL=http://sandbox:3080
 
-      # >>> Bundler do Sandpack self-hostado (URL que o navegador vai chamar)
-      - SANDPACK_BUNDLER_URL=https://bundler.ai.allagidigital.com
+      # >>> Bundler do Sandpack self-hostado (mesmo host, porta 8443)
+      - SANDPACK_BUNDLER_URL=https://ai.allagidigital.com:8443
 
-      # (Opcional, só se algum dia você self-hostar o "static browser server"):
-      # - SANDPACK_STATIC_BUNDLER_URL=https://preview.ai.allagidigital.com
+      # (Opcional se um dia auto-hospedar o "static browser server"):
+      # - SANDPACK_STATIC_BUNDLER_URL=https://ai.allagidigital.com:9443
 
     volumes:
       - type: bind
@@ -50,7 +50,7 @@ services:
       - "traefik.http.routers.librechat.middlewares=csp@docker"
       - "traefik.http.routers.librechat.priority=1"
 
-      # ---------- Roteadores novos (HTTPS com Let's Encrypt) ----------
+      # ---------- Roteador principal (HTTPS 443) ----------
       - "traefik.http.routers.librechat-https.rule=Host(`ai.allagidigital.com`)"
       - "traefik.http.routers.librechat-https.entrypoints=websecure"
       - "traefik.http.routers.librechat-https.tls=true"
@@ -68,8 +68,8 @@ services:
       # Serviço interno do app
       - "traefik.http.services.librechat.loadbalancer.server.port=3080"
 
-      # CSP: libera o iframe do Bundler self-host (e mantém o CDN como fallback, se precisar)
-      - "traefik.http.middlewares.csp.headers.contentSecurityPolicy=frame-src 'self' https://bundler.ai.allagidigital.com https://*.codesandbox.io"
+      # CSP: libera o iframe do bundler na porta 8443 e (se preciso) o CDN
+      - "traefik.http.middlewares.csp.headers.contentSecurityPolicy=frame-src 'self' https://ai.allagidigital.com:8443 https://*.codesandbox.io"
 
   sandbox:
     image: librechat/sandbox:latest
@@ -91,16 +91,12 @@ services:
       - "80"
     labels:
       - "traefik.enable=true"
-      # HTTPS público do bundler (necessário p/ Service Worker do preview)
-      - "traefik.http.routers.sandpack.rule=Host(`bundler.ai.allagidigital.com`)"
-      - "traefik.http.routers.sandpack.entrypoints=websecure"
-      - "traefik.http.routers.sandpack.tls=true"
-      - "traefik.http.routers.sandpack.tls.certresolver=le"
-      - "traefik.http.services.sandpack.loadbalancer.server.port=80"
-      # redireciona http->https para o bundler
-      - "traefik.http.routers.sandpack-http.rule=Host(`bundler.ai.allagidigital.com`)"
-      - "traefik.http.routers.sandpack-http.entrypoints=web"
-      - "traefik.http.routers.sandpack-http.middlewares=redirect-to-https@docker"
+      # usa o MESMO host, mas numa entrypoint TLS separada (porta 8443)
+      - "traefik.http.routers.sandpack-8443.rule=Host(`ai.allagidigital.com`)"
+      - "traefik.http.routers.sandpack-8443.entrypoints=websecure8443"
+      - "traefik.http.routers.sandpack-8443.tls=true"
+      - "traefik.http.routers.sandpack-8443.tls.certresolver=le"  # pode reutilizar o mesmo cert
+      - "traefik.http.services.sandpack-8443.loadbalancer.server.port=80"
 
   # Reverse proxy + TLS automático (Let's Encrypt)
   traefik:
@@ -111,6 +107,8 @@ services:
       - --providers.docker.exposedbydefault=false
       - --entrypoints.web.address=:80
       - --entrypoints.websecure.address=:443
+      # nova entrypoint TLS para a porta 8443 (bundler)
+      - --entrypoints.websecure8443.address=:8443
       # ACME/Let's Encrypt (defina seu e-mail no .env: ACME_EMAIL=voce@exemplo.com)
       - --certificatesresolvers.le.acme.email=${ACME_EMAIL:-seu-email@exemplo.com}
       - --certificatesresolvers.le.acme.storage=/letsencrypt/acme.json
@@ -124,6 +122,8 @@ services:
       # Necessários para Let's Encrypt e HTTPS final:
       - "80:80"
       - "443:443"
+      # Porta extra para o bundler HTTPS sem subdomínio
+      - "8443:8443"
       # (opcional) dashboard:
       # - "8091:8080"
     volumes:
