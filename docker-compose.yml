@@ -20,10 +20,10 @@ services:
       - SANDBOX_URL=http://sandbox:3080
 
       # >>> Bundler do Sandpack self-hostado (URL que o navegador vai chamar)
-      - SANDPACK_BUNDLER_URL=https://bundler-135-181-197-29.sslip.io
+      - SANDPACK_BUNDLER_URL=https://bundler.ai.allagidigital.com
 
-      # (Opcional se um dia auto-hospedar o "static browser server"):
-      # - SANDPACK_STATIC_BUNDLER_URL=https://preview-135-181-197-29.sslip.io
+      # (Opcional, só se algum dia você self-hostar o "static browser server"):
+      # - SANDPACK_STATIC_BUNDLER_URL=https://preview.ai.allagidigital.com
 
     volumes:
       - type: bind
@@ -40,33 +40,36 @@ services:
       - sandbox
       - sandpack-bundler
 
-    # Traefik: mantém o acesso antigo (HTTP:8090) e adiciona HTTPS com host sslip.io
+    # Traefik: mantém o acesso antigo (HTTP:8090) e adiciona HTTPS com seu domínio
     labels:
       - "traefik.enable=true"
 
-      # ---------- Roteador antigo (HTTP via :8090) ----------
+      # ---------- Roteador antigo (HTTP via :8090, genérico) ----------
       - "traefik.http.routers.librechat.rule=PathPrefix(`/`)"
       - "traefik.http.routers.librechat.entrypoints=web"
       - "traefik.http.routers.librechat.middlewares=csp@docker"
+      - "traefik.http.routers.librechat.priority=1"
 
       # ---------- Roteadores novos (HTTPS com Let's Encrypt) ----------
-      - "traefik.http.routers.librechat-https.rule=Host(`librechat-135-181-197-29.sslip.io`)"
+      - "traefik.http.routers.librechat-https.rule=Host(`ai.allagidigital.com`)"
       - "traefik.http.routers.librechat-https.entrypoints=websecure"
       - "traefik.http.routers.librechat-https.tls=true"
       - "traefik.http.routers.librechat-https.tls.certresolver=le"
       - "traefik.http.routers.librechat-https.middlewares=csp@docker"
+      - "traefik.http.routers.librechat-https.priority=100"
 
-      # (opcional) redireciona HTTP->HTTPS para o host sslip.io
-      - "traefik.http.routers.librechat-http.rule=Host(`librechat-135-181-197-29.sslip.io`)"
+      # (opcional) redireciona HTTP->HTTPS para o seu host
+      - "traefik.http.routers.librechat-http.rule=Host(`ai.allagidigital.com`)"
       - "traefik.http.routers.librechat-http.entrypoints=web"
       - "traefik.http.routers.librechat-http.middlewares=redirect-to-https@docker"
+      - "traefik.http.routers.librechat-http.priority=100"
       - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
 
       # Serviço interno do app
       - "traefik.http.services.librechat.loadbalancer.server.port=3080"
 
-      # CSP: libera o iframe do Sandpack (bundler self-host + fallback CDN público)
-      - "traefik.http.middlewares.csp.headers.contentSecurityPolicy=frame-src 'self' https://*.codesandbox.io https://bundler-135-181-197-29.sslip.io"
+      # CSP: libera o iframe do Bundler self-host (e mantém o CDN como fallback, se precisar)
+      - "traefik.http.middlewares.csp.headers.contentSecurityPolicy=frame-src 'self' https://bundler.ai.allagidigital.com https://*.codesandbox.io"
 
   sandbox:
     image: librechat/sandbox:latest
@@ -80,7 +83,7 @@ services:
     # ports:
     #   - "3081:3080"
 
-  # >>> Bundler do Sandpack (sem precisar clonar nada do GitHub)
+  # >>> Bundler do Sandpack (self-host, sem precisar clonar nada do GitHub)
   sandpack-bundler:
     image: ghcr.io/librechat-ai/codesandbox-client/bundler:latest
     restart: unless-stopped
@@ -88,14 +91,14 @@ services:
       - "80"
     labels:
       - "traefik.enable=true"
-      # HTTPS público do bundler (necessário p/ SW)
-      - "traefik.http.routers.sandpack.rule=Host(`bundler-135-181-197-29.sslip.io`)"
+      # HTTPS público do bundler (necessário p/ Service Worker do preview)
+      - "traefik.http.routers.sandpack.rule=Host(`bundler.ai.allagidigital.com`)"
       - "traefik.http.routers.sandpack.entrypoints=websecure"
       - "traefik.http.routers.sandpack.tls=true"
       - "traefik.http.routers.sandpack.tls.certresolver=le"
       - "traefik.http.services.sandpack.loadbalancer.server.port=80"
       # redireciona http->https para o bundler
-      - "traefik.http.routers.sandpack-http.rule=Host(`bundler-135-181-197-29.sslip.io`)"
+      - "traefik.http.routers.sandpack-http.rule=Host(`bundler.ai.allagidigital.com`)"
       - "traefik.http.routers.sandpack-http.entrypoints=web"
       - "traefik.http.routers.sandpack-http.middlewares=redirect-to-https@docker"
 
