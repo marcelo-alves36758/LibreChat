@@ -2,60 +2,71 @@ version: "3.9"
 
 services:
   api:
-    # Se você quer buildar sua imagem custom (com o hero.css), mantenha "build".
-    # Se preferir usar a imagem oficial, troque por:
-    # image: ghcr.io/danny-avila/librechat:latest
+    # mantém sua build custom (com hero.css, etc.)
     build:
       context: .
       dockerfile: Dockerfile
-      # args:
-      #   - THEME_SHA=${THEME_SHA:-dev}
     restart: unless-stopped
 
-    # Mantido: acesso direto na 3080 como você já usa
+    # Mantido: acesso direto na 3080 (não quebra nada do que você já usa)
     ports:
-      - "3080:3080"         # expõe só a API do LibreChat
+      - "3080:3080"
 
     environment:
       - NODE_ENV=production
-      # habilita o uso do sandbox dentro do LibreChat
+
+      # Artefacts/Sandpack internos do LibreChat
       - SANDBOX=true
-      # aponta para o serviço "sandbox" na rede do compose (NÃO use localhost aqui)
       - SANDBOX_URL=http://sandbox:3080
-      # (opcional) se o LibreChat estiver atrás de proxy/reverse-proxy
-      # - TRUST_PROXY=true
+
+      # >>> Bundler do Sandpack self-hostado (URL que o navegador vai chamar)
+      - SANDPACK_BUNDLER_URL=https://bundler-135-181-197-29.sslip.io
+
+      # (Opcional se um dia auto-hospedar o "static browser server"):
+      # - SANDPACK_STATIC_BUNDLER_URL=https://preview-135-181-197-29.sslip.io
 
     volumes:
-      # 1) injeta o .env do aplicativo dentro do container (LibreChat lê /app/.env)
       - type: bind
         source: ./.env
         target: /app/.env
-
-      # 2) sua config do LibreChat (hot swap, sem rebuild)
       - type: bind
-        # AJUSTE este caminho se no Dokploy o repositório estiver noutra pasta
         source: ./custom/librechat.yaml
         target: /app/config/librechat.yaml
-
-      # 3) estáticos/persistências opcionais
       - ./images:/app/client/public/images
       - ./uploads:/app/uploads
       - ./logs:/app/api/logs
 
     depends_on:
       - sandbox
+      - sandpack-bundler
 
-    # >>> Integração com Traefik (não quebra o uso atual na 3080) <<<
+    # Traefik: mantém o acesso antigo (HTTP:8090) e adiciona HTTPS com host sslip.io
     labels:
       - "traefik.enable=true"
-      # Roteador: tudo que chegar no Traefik vai para este serviço
+
+      # ---------- Roteador antigo (HTTP via :8090) ----------
       - "traefik.http.routers.librechat.rule=PathPrefix(`/`)"
       - "traefik.http.routers.librechat.entrypoints=web"
-      # Porta interna do serviço (a que o Traefik deve usar)
-      - "traefik.http.services.librechat.loadbalancer.server.port=3080"
-      # Middleware para injetar a CSP necessária aos Artifacts (Sandpack)
-      - "traefik.http.middlewares.csp.headers.contentSecurityPolicy=frame-src 'self' https://*.codesandbox.io"
       - "traefik.http.routers.librechat.middlewares=csp@docker"
+
+      # ---------- Roteadores novos (HTTPS com Let's Encrypt) ----------
+      - "traefik.http.routers.librechat-https.rule=Host(`librechat-135-181-197-29.sslip.io`)"
+      - "traefik.http.routers.librechat-https.entrypoints=websecure"
+      - "traefik.http.routers.librechat-https.tls=true"
+      - "traefik.http.routers.librechat-https.tls.certresolver=le"
+      - "traefik.http.routers.librechat-https.middlewares=csp@docker"
+
+      # (opcional) redireciona HTTP->HTTPS para o host sslip.io
+      - "traefik.http.routers.librechat-http.rule=Host(`librechat-135-181-197-29.sslip.io`)"
+      - "traefik.http.routers.librechat-http.entrypoints=web"
+      - "traefik.http.routers.librechat-http.middlewares=redirect-to-https@docker"
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+
+      # Serviço interno do app
+      - "traefik.http.services.librechat.loadbalancer.server.port=3080"
+
+      # CSP: libera o iframe do Sandpack (bundler self-host + fallback CDN público)
+      - "traefik.http.middlewares.csp.headers.contentSecurityPolicy=frame-src 'self' https://*.codesandbox.io https://bundler-135-181-197-29.sslip.io"
 
   sandbox:
     image: librechat/sandbox:latest
@@ -63,34 +74,55 @@ services:
     restart: unless-stopped
     environment:
       - NODE_ENV=production
-      # (opcional) se quiser restringir CORS do sandbox, você pode expor variáveis aqui
-      # como SANDBOX_CORS_ORIGIN, dependendo da versão da imagem. Se não souber, deixe sem.
     expose:
-      - "3080"              # só na rede interna do compose
-    # Se quiser acessar o sandbox diretamente do host para debug, descomente:
+      - "3080"
+    # Se quiser depurar o sandbox direto:
     # ports:
     #   - "3081:3080"
 
-  # Novo: Traefik como sidecar, para injetar o header CSP
+  # >>> Bundler do Sandpack (sem precisar clonar nada do GitHub)
+  sandpack-bundler:
+    image: ghcr.io/librechat-ai/codesandbox-client/bundler:latest
+    restart: unless-stopped
+    expose:
+      - "80"
+    labels:
+      - "traefik.enable=true"
+      # HTTPS público do bundler (necessário p/ SW)
+      - "traefik.http.routers.sandpack.rule=Host(`bundler-135-181-197-29.sslip.io`)"
+      - "traefik.http.routers.sandpack.entrypoints=websecure"
+      - "traefik.http.routers.sandpack.tls=true"
+      - "traefik.http.routers.sandpack.tls.certresolver=le"
+      - "traefik.http.services.sandpack.loadbalancer.server.port=80"
+      # redireciona http->https para o bundler
+      - "traefik.http.routers.sandpack-http.rule=Host(`bundler-135-181-197-29.sslip.io`)"
+      - "traefik.http.routers.sandpack-http.entrypoints=web"
+      - "traefik.http.routers.sandpack-http.middlewares=redirect-to-https@docker"
+
+  # Reverse proxy + TLS automático (Let's Encrypt)
   traefik:
     image: traefik:v3.1
     restart: unless-stopped
     command:
       - --providers.docker=true
       - --providers.docker.exposedbydefault=false
-      # Entrada HTTP do Traefik (sem conflitar com sua 3080 atual)
       - --entrypoints.web.address=:80
-      # (opcional) dashboard do Traefik para debug:
+      - --entrypoints.websecure.address=:443
+      # ACME/Let's Encrypt (defina seu e-mail no .env: ACME_EMAIL=voce@exemplo.com)
+      - --certificatesresolvers.le.acme.email=${ACME_EMAIL:-seu-email@exemplo.com}
+      - --certificatesresolvers.le.acme.storage=/letsencrypt/acme.json
+      - --certificatesresolvers.le.acme.httpchallenge=true
+      - --certificatesresolvers.le.acme.httpchallenge.entrypoint=web
+      # (opcional) dashboard p/ debug:
       # - --api.insecure=true
-    # Mapeamos a porta 80 do Traefik para 8090 no host,
-    # para evitar conflito e manter seu acesso atual na 3080.
     ports:
+      # Mantemos o antigo mapeamento para teste local:
       - "8090:80"
-      # (opcional) dashboard se habilitar --api.insecure:
+      # Necessários para Let's Encrypt e HTTPS final:
+      - "80:80"
+      - "443:443"
+      # (opcional) dashboard:
       # - "8091:8080"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
-
-# networks:
-#   default:
-#     name: librechat_net   # opcional: nomear a rede
+      - ./letsencrypt:/letsencrypt
