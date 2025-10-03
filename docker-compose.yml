@@ -11,8 +11,11 @@ services:
       # args:
       #   - THEME_SHA=${THEME_SHA:-dev}
     restart: unless-stopped
+
+    # Mantido: acesso direto na 3080 como você já usa
     ports:
       - "3080:3080"         # expõe só a API do LibreChat
+
     environment:
       - NODE_ENV=production
       # habilita o uso do sandbox dentro do LibreChat
@@ -21,6 +24,7 @@ services:
       - SANDBOX_URL=http://sandbox:3080
       # (opcional) se o LibreChat estiver atrás de proxy/reverse-proxy
       # - TRUST_PROXY=true
+
     volumes:
       # 1) injeta o .env do aplicativo dentro do container (LibreChat lê /app/.env)
       - type: bind
@@ -40,11 +44,18 @@ services:
 
     depends_on:
       - sandbox
-    # Caso seus bancos/filas (Mongo/Redis/Meili) estejam em outra rede Docker compartilhada:
-    # networks:
-    #   default:
-    #     external: true
-    #     name: sua_rede_compartilhada
+
+    # >>> Integração com Traefik (não quebra o uso atual na 3080) <<<
+    labels:
+      - "traefik.enable=true"
+      # Roteador: tudo que chegar no Traefik vai para este serviço
+      - "traefik.http.routers.librechat.rule=PathPrefix(`/`)"
+      - "traefik.http.routers.librechat.entrypoints=web"
+      # Porta interna do serviço (a que o Traefik deve usar)
+      - "traefik.http.services.librechat.loadbalancer.server.port=3080"
+      # Middleware para injetar a CSP necessária aos Artifacts (Sandpack)
+      - "traefik.http.middlewares.csp.headers.contentSecurityPolicy=frame-src 'self' https://*.codesandbox.io"
+      - "traefik.http.routers.librechat.middlewares=csp@docker"
 
   sandbox:
     image: librechat/sandbox:latest
@@ -59,6 +70,26 @@ services:
     # Se quiser acessar o sandbox diretamente do host para debug, descomente:
     # ports:
     #   - "3081:3080"
+
+  # Novo: Traefik como sidecar, para injetar o header CSP
+  traefik:
+    image: traefik:v3.1
+    restart: unless-stopped
+    command:
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      # Entrada HTTP do Traefik (sem conflitar com sua 3080 atual)
+      - --entrypoints.web.address=:80
+      # (opcional) dashboard do Traefik para debug:
+      # - --api.insecure=true
+    # Mapeamos a porta 80 do Traefik para 8090 no host,
+    # para evitar conflito e manter seu acesso atual na 3080.
+    ports:
+      - "8090:80"
+      # (opcional) dashboard se habilitar --api.insecure:
+      # - "8091:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
 
 # networks:
 #   default:
