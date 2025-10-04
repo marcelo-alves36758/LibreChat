@@ -2,36 +2,37 @@ version: "3.9"
 
 services:
   api:
-    # mantém sua build custom (com hero.css, etc.)
+    # sua build custom (mantida)
     build:
       context: .
       dockerfile: Dockerfile
     restart: unless-stopped
 
-    # Mantido: acesso direto na 3080 (não quebra nada do que você já usa)
-    ports:
-      - "3080:3080"
+    # Em Dokploy NÃO publique portas; apenas exponha a interna.
+    # O domínio do Dokploy apontará para a 3080.
+    expose:
+      - "3080"
 
     environment:
-      - NODE_ENV=production
+      NODE_ENV: production
+      # Essenciais para o proxy do Dokploy alcançar o app
+      HOST: 0.0.0.0
+      PORT: 3080
 
       # Artefacts/Sandpack internos do LibreChat
-      - SANDBOX=true
-      - SANDBOX_URL=http://sandbox:3080
+      SANDBOX: "true"
+      SANDBOX_URL: http://sandbox:3080
 
-      # >>> Bundler do Sandpack self-hostado (mesmo host, porta 8443)
-      - SANDPACK_BUNDLER_URL=https://ai.allagidigital.com:8443
+      # URL pública do seu bundler (defina no Dokploy ou no .env do Compose).
+      # Ex.: https://bundler-xxxx.traefik.me  (recomendado criar outro app p/ expor o bundler)
+      SANDPACK_BUNDLER_URL: ${SANDPACK_BUNDLER_URL:-}
 
-      # (Opcional se um dia auto-hospedar o "static browser server"):
-      # - SANDPACK_STATIC_BUNDLER_URL=https://ai.allagidigital.com:9443
+      # (Opcional) se um dia auto-hospedar o static-browser-server:
+      # SANDPACK_STATIC_BUNDLER_URL: ${SANDPACK_STATIC_BUNDLER_URL:-}
 
     volumes:
-      - type: bind
-        source: ./.env
-        target: /app/.env
-      - type: bind
-        source: ./custom/librechat.yaml
-        target: /app/config/librechat.yaml
+      - ./.env:/app/.env
+      - ./custom/librechat.yaml:/app/config/librechat.yaml
       - ./images:/app/client/public/images
       - ./uploads:/app/uploads
       - ./logs:/app/api/logs
@@ -40,92 +41,23 @@ services:
       - sandbox
       - sandpack-bundler
 
-    # Traefik: mantém o acesso antigo (HTTP:8090) e adiciona HTTPS com seu domínio
-    labels:
-      - "traefik.enable=true"
-
-      # ---------- Roteador antigo (HTTP via :8090, genérico) ----------
-      - "traefik.http.routers.librechat.rule=PathPrefix(`/`)"
-      - "traefik.http.routers.librechat.entrypoints=web"
-      - "traefik.http.routers.librechat.middlewares=csp@docker"
-      - "traefik.http.routers.librechat.priority=1"
-
-      # ---------- Roteador principal (HTTPS 443) ----------
-      - "traefik.http.routers.librechat-https.rule=Host(`ai.allagidigital.com`)"
-      - "traefik.http.routers.librechat-https.entrypoints=websecure"
-      - "traefik.http.routers.librechat-https.tls=true"
-      - "traefik.http.routers.librechat-https.tls.certresolver=le"
-      - "traefik.http.routers.librechat-https.middlewares=csp@docker"
-      - "traefik.http.routers.librechat-https.priority=100"
-
-      # (opcional) redireciona HTTP->HTTPS para o seu host
-      - "traefik.http.routers.librechat-http.rule=Host(`ai.allagidigital.com`)"
-      - "traefik.http.routers.librechat-http.entrypoints=web"
-      - "traefik.http.routers.librechat-http.middlewares=redirect-to-https@docker"
-      - "traefik.http.routers.librechat-http.priority=100"
-      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
-
-      # Serviço interno do app
-      - "traefik.http.services.librechat.loadbalancer.server.port=3080"
-
-      # CSP: libera o iframe do bundler na porta 8443 e (se preciso) o CDN
-      - "traefik.http.middlewares.csp.headers.contentSecurityPolicy=frame-src 'self' https://ai.allagidigital.com:8443 https://*.codesandbox.io"
+    # ❌ REMOVIDO: labels do Traefik (Dokploy já faz o roteamento)
+    # ❌ REMOVIDO: ports: "3080:3080" (não publicar portas no host no Dokploy)
 
   sandbox:
     image: librechat/sandbox:latest
-    container_name: librechat_sandbox
     restart: unless-stopped
     environment:
-      - NODE_ENV=production
+      NODE_ENV: production
     expose:
       - "3080"
-    # Se quiser depurar o sandbox direto:
-    # ports:
-    #   - "3081:3080"
+    # (se quiser depurar local, pode publicar porta aqui num ambiente fora do Dokploy)
 
-  # >>> Bundler do Sandpack (self-host, sem precisar clonar nada do GitHub)
+  # Bundler do Sandpack (Codesandbox client)
   sandpack-bundler:
     image: ghcr.io/librechat-ai/codesandbox-client/bundler:latest
     restart: unless-stopped
     expose:
       - "80"
-    labels:
-      - "traefik.enable=true"
-      # usa o MESMO host, mas numa entrypoint TLS separada (porta 8443)
-      - "traefik.http.routers.sandpack-8443.rule=Host(`ai.allagidigital.com`)"
-      - "traefik.http.routers.sandpack-8443.entrypoints=websecure8443"
-      - "traefik.http.routers.sandpack-8443.tls=true"
-      - "traefik.http.routers.sandpack-8443.tls.certresolver=le"  # pode reutilizar o mesmo cert
-      - "traefik.http.services.sandpack-8443.loadbalancer.server.port=80"
-
-  # Reverse proxy + TLS automático (Let's Encrypt)
-  traefik:
-    image: traefik:v3.1
-    restart: unless-stopped
-    command:
-      - --providers.docker=true
-      - --providers.docker.exposedbydefault=false
-      - --entrypoints.web.address=:80
-      - --entrypoints.websecure.address=:443
-      # nova entrypoint TLS para a porta 8443 (bundler)
-      - --entrypoints.websecure8443.address=:8443
-      # ACME/Let's Encrypt (defina seu e-mail no .env: ACME_EMAIL=voce@exemplo.com)
-      - --certificatesresolvers.le.acme.email=${ACME_EMAIL:-seu-email@exemplo.com}
-      - --certificatesresolvers.le.acme.storage=/letsencrypt/acme.json
-      - --certificatesresolvers.le.acme.httpchallenge=true
-      - --certificatesresolvers.le.acme.httpchallenge.entrypoint=web
-      # (opcional) dashboard p/ debug:
-      # - --api.insecure=true
-    ports:
-      # Mantemos o antigo mapeamento para teste local:
-      - "8090:80"
-      # Necessários para Let's Encrypt e HTTPS final:
-      - "80:80"
-      - "443:443"
-      # Porta extra para o bundler HTTPS sem subdomínio
-      - "8443:8443"
-      # (opcional) dashboard:
-      # - "8091:8080"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ./letsencrypt:/letsencrypt
+    # ❌ REMOVIDO: labels do Traefik (não serão usados pelo Dokploy)
+    # (Ver notas abaixo para expor esse serviço com HTTPS)
