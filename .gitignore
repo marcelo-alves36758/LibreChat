@@ -145,6 +145,8 @@ helm/**/.values.yaml
 **/*.private.*
 **/*.local.yaml
 **/*.local.yml
+**/*.local.json
+**/*.local.env
 **/*.env
 **/*.env.*
 !**/*.env.example

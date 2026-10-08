@@ -11,10 +11,10 @@ function checkPublic(root = process.cwd()) {
     if (!fs.existsSync(`${root}/${file}`)) continue; // deleted in the proposed change
     const isExample = /(?:^|\.)example(?:\.|$)/.test(file);
     if (
-      !isExample &&
-      (/(^|\/)(private|secrets)\//.test(file) ||
-        /(^|\/)\.env(?:\.|$)|\.env$|\.private\.|\.local\.ya?ml$/.test(file) ||
-        /(^|\/)librechat\.ya?ml$|(^|\/)auth\.json$/.test(file))
+      /(^|\/)(private|secrets)\//.test(file) ||
+      (!isExample &&
+        (/(^|\/)\.env(?:\.|$)|\.env$|\.private\.|\.local\.(?:ya?ml|json|env)$/.test(file) ||
+          /(^|\/)librechat\.ya?ml$|(^|\/)auth\.json$/.test(file)))
     ) {
       issues.push(`${file}: private runtime file must not be tracked`);
     }

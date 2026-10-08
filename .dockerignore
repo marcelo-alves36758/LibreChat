@@ -24,8 +24,9 @@ docs
 **/private
 **/secrets
 **/*.private.*
-**/*.local.yaml
-**/*.local.yml
+**/*.local.*
+**/.npmrc
+**/storageState.json
 **/librechat.yaml
 **/librechat.yml
 **/auth.json
@@ -38,6 +39,10 @@ docs
 uploads
 images
 logs
+data
+archive
+docker-compose.override.*
+compose.override.*
 api/data
 api/logs
 client/dist

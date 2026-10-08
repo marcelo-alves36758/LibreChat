@@ -31,6 +31,9 @@ function checkBuild(root = process.cwd(), image = false) {
       'uploads/hero-canary',
       'api/data/hero-canary',
       'logs/hero-canary',
+      'data/hero-canary',
+      'docker-compose.override.yml',
+      'custom/config.local.json',
     ]) {
       assert.ok(!fs.existsSync(path.join(root, file)), 'Private material was baked into the image');
     }

@@ -13,9 +13,11 @@ on:
       - '.gitleaks.toml'
       - 'package*.json'
       - '.github/workflows/hero-config.yml'
-  push:
-    branches: ['security/hero-private-runtime-config']
   workflow_dispatch:
+
+concurrency:
+  group: hero-config-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -54,8 +56,8 @@ jobs:
         run: docker compose config --quiet
       - name: Build image without corporate configuration or credentials
         run: |
-          mkdir -p private uploads api/data logs
-          for file in .env custom/librechat.yaml private/config.yaml uploads/hero-canary api/data/hero-canary logs/hero-canary; do
+          mkdir -p private uploads api/data logs data
+          for file in .env custom/librechat.yaml private/config.yaml uploads/hero-canary api/data/hero-canary logs/hero-canary data/hero-canary docker-compose.override.yml custom/config.local.json; do
             echo 'hero-build-exclusion-canary' > "$file"
           done
           docker build --build-arg THEME_SHA=ci -t hero-config-validation:ci .
