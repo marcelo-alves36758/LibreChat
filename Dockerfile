@@ -15,17 +15,12 @@ COPY client/package.json ./client/package.json
 COPY packages/data-provider/package.json ./packages/data-provider/package.json
 COPY packages/data-schemas/package.json ./packages/data-schemas/package.json
 COPY packages/api/package.json ./packages/api/package.json
+COPY packages/client/package.json ./packages/client/package.json
 
-# Configuração do backend (custom config)
-COPY custom/librechat.yaml /app/librechat.yaml
+# A configuração corporativa é montada somente em runtime, nunca no build.
 
 # Instala dependências
 RUN npm ci --no-audit
-
-# Asserção: config deve existir
-RUN test -f /app/librechat.yaml \
-  && echo "OK: /app/librechat.yaml presente" \
-  || (echo "ERRO: /app/librechat.yaml ausente"; exit 1)
 
 # Código do projeto (inclui /custom)
 COPY . .
@@ -69,6 +64,9 @@ RUN set -e; \
   fi; \
   echo '>> custom.css injetado com sucesso como último CSS.'
 
+# Verifica o tema e a ausência de arquivos privados, sem acessar serviços externos.
+RUN npm run check:hero-build -- --image
+
 # ====== Compat extra: stub de auth.json (silencia ENOENT sem impactar env/yaml) ======
 RUN mkdir -p /app/api/data && \
     { [ -f /app/api/data/auth.json ] || echo '{}' > /app/api/data/auth.json; } && \
@@ -80,4 +78,6 @@ RUN npm prune --production && npm cache clean --force
 # ====== Runtime do backend ======
 EXPOSE 3080
 ENV HOST=0.0.0.0
+ENV CONFIG_PATH=/run/secrets/hero-config.yaml
+ENTRYPOINT ["sh", "/app/config/hero/entrypoint.sh"]
 CMD ["npm", "run", "backend"]

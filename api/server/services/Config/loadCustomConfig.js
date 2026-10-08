@@ -35,8 +35,8 @@ async function loadCustomConfig(printConfig = true) {
     try {
       const response = await axios.get(configPath);
       customConfig = response.data;
-    } catch (error) {
-      i === 0 && logger.error(`Failed to fetch the remote config file from ${configPath}`, error);
+    } catch {
+      i === 0 && logger.error('Failed to fetch the remote config file.');
       i === 0 && i++;
       return null;
     }
@@ -52,7 +52,7 @@ async function loadCustomConfig(printConfig = true) {
     }
 
     if (customConfig.reason || customConfig.stack) {
-      i === 0 && logger.error('Config file YAML format is invalid:', customConfig);
+      i === 0 && logger.error('Config file YAML format is invalid.');
       i === 0 && i++;
       return null;
     }
@@ -61,8 +61,8 @@ async function loadCustomConfig(printConfig = true) {
   if (typeof customConfig === 'string') {
     try {
       customConfig = yaml.load(customConfig);
-    } catch (parseError) {
-      i === 0 && logger.info(`Failed to parse the YAML config from ${configPath}`, parseError);
+    } catch {
+      i === 0 && logger.info('Failed to parse the YAML config.');
       i === 0 && i++;
       return null;
     }
@@ -84,8 +84,8 @@ Please specify a correct \`imageOutputType\` value (case-sensitive).
     );
   }
   if (!result.success) {
-    let errorMessage = `Invalid custom config file at ${configPath}:
-${JSON.stringify(result.error, null, 2)}`;
+    // Zod/parser errors can contain input values and YAML excerpts from private configuration.
+    const errorMessage = 'Invalid custom config file: schema validation failed.';
 
     if (i === 0) {
       logger.error(errorMessage);
@@ -109,16 +109,13 @@ https://www.librechat.ai/docs/configuration/stt_tts`);
     return null;
   } else {
     if (printConfig) {
-      logger.info('Custom config file loaded:');
-      logger.info(JSON.stringify(customConfig, null, 2));
-      logger.debug('Custom config:', customConfig);
+      logger.info('Custom config file loaded and validated.');
     }
   }
 
   (customConfig.endpoints?.custom ?? [])
     .filter((endpoint) => endpoint.customParams)
     .forEach((endpoint) => parseCustomParams(endpoint.name, endpoint.customParams));
-
 
   if (result.data.modelSpecs) {
     customConfig.modelSpecs = result.data.modelSpecs;
