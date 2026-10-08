@@ -15,3 +15,36 @@ docs
 
 # Ignore all hidden files
 .*
+
+# Runtime-only material. Git ignore rules do not protect the Docker context.
+**/.env
+**/.env.*
+**/*.env
+**/*.env.*
+**/private
+**/secrets
+**/*.private.*
+**/*.local.yaml
+**/*.local.yml
+**/librechat.yaml
+**/librechat.yml
+**/auth.json
+**/*.pem
+**/*.key
+**/*.p12
+**/*.pfx
+**/*.cert
+**/*.log
+uploads
+images
+logs
+api/data
+api/logs
+client/dist
+client/public/custom.css
+test-results
+coverage
+# Only reviewed public visual assets from custom/ belong in the image.
+custom/**
+!custom/custom.css
+!custom/hero.css

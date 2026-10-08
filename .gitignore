@@ -138,3 +138,16 @@ helm/**/.values.yaml
 /.tabnine/
 /.codeium
 *.local.md
+
+# Hero: private deployment material (also excluded from Docker's build context)
+**/private/
+**/secrets/
+**/*.private.*
+**/*.local.yaml
+**/*.local.yml
+**/*.env
+**/*.env.*
+!**/*.env.example
+!**/*.example.yaml
+!**/*.example.yml
+client/public/custom.css

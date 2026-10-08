@@ -1,0 +1,343 @@
+# PUBLIC EXAMPLE ONLY. Never mount this file in production.
+# Copy the EFFECTIVE deployment configuration outside the checkout; see docs/security/hero-configuration.md.
+# Replace every REPLACE_* in that private copy. API keys remain environment references.
+# Secondary model aliases are distinct: this version does not implement automatic group failover.
+version: 1.2.9
+cache: true
+memory:
+  disabled: false
+  validKeys:
+    - preferences
+    - work_info
+    - skills
+    - interests
+    - context
+    - learned_facts
+  tokenLimit: 10000
+  personalize: true
+  messageWindowSize: 10
+  agent:
+    provider: azureOpenAI
+    model: gpt-5-mini
+    instructions: >
+      You are the Hero Memory Manager for Ero Copper.
+
+      Your job is to extract, normalize, and update user memory succinctly and safely.
+
+      Specifically for learned facts always ask the user if that information is relevant to be
+      remembered.
+
+
+      STRICT RULES:
+
+      - Allowed keys: preferences, work_info, skills, interests, context, learned_facts
+
+      - Store only stable, long-lived, useful facts. Keep values short and neutral.
+
+      - Never store sensitive personal data, secrets, or third-party identifiers.
+
+      - Prefer updates over duplicates. Remove outdated or contradicted info.
+
+      - For temporary context, set an expiresAt or skip storing.
+
+      OUTPUT: zero or one {key, value} pair to write; if not confident, output none.
+    model_parameters:
+      temperature: 0.1
+fileStrategy: local
+interface:
+  title: Hero
+  customWelcome: "{{user.name}}, welcome to Hero! An Ero assisted intelligence model"
+  temporaryChatRetention: 48
+  mcpServers:
+    placeholder: MCP Servers
+  modelSelect: false
+  agents: true
+  sidePanel: true
+  parameters: false
+  presets: false
+  prompts: true
+  bookmarks: false
+  multiConvo: false
+  webSearch: true
+  fileSearch: true
+  runCode: true
+  hideEndpoints:
+    - google
+rateLimits:
+  fileUploads:
+    ipMax: 120
+    ipWindowInMinutes: 60
+    userMax: 60
+    userWindowInMinutes: 60
+  conversationsImport:
+    ipMax: 30
+    ipWindowInMinutes: 60
+    userMax: 20
+    userWindowInMinutes: 60
+  stt:
+    ipMax: 120
+    ipWindowInMinutes: 10
+    userMax: 60
+    userWindowInMinutes: 10
+    maxSecondsPerRequest: 180
+  tts:
+    ipMax: 120
+    ipWindowInMinutes: 10
+    userMax: 60
+    userWindowInMinutes: 10
+    maxCharsPerRequest: 1200
+  webSearch:
+    ipMax: 100
+    ipWindowInMinutes: 15
+    userMax: 40
+    userWindowInMinutes: 15
+  actions:
+    ipMax: 200
+    ipWindowInMinutes: 60
+    userMax: 100
+    userWindowInMinutes: 60
+  codeInterpreter:
+    ipMax: 60
+    ipWindowInMinutes: 60
+    userMax: 30
+    userWindowInMinutes: 60
+    maxTimeoutSeconds: 60
+  imageGeneration:
+    ipMax: 60
+    ipWindowInMinutes: 60
+    userMax: 30
+    userWindowInMinutes: 60
+ocr:
+  mistralModel: REPLACE_OCR_DEPLOYMENT
+  apiKey: ${AZURE_MISTRAL_OCR_API_KEY}
+  baseURL: https://REPLACE_OCR_RESOURCE.services.ai.azure.com/providers/mistral/azure/ocr
+  strategy: azure_mistral_ocr
+endpoints:
+  all:
+    titleConvo: true
+    titleEndpoint: azureOpenAI
+    titleModel: gpt-5-mini
+    summarize: true
+    summaryEndpoint: azureOpenAI
+    summaryModel: gpt-5-mini
+    streamRate: 70
+    titlePrompt: |
+      Analyze this conversation and provide:
+      A concise title in the detected language (5 words or less, no punctuation or quotation)
+      {convo}
+  agents:
+    disableBuilder: false
+    recursionLimit: 50
+    maxRecursionLimit: 100
+    maxCitations: 50
+    maxCitationsPerFile: 10
+    minRelevanceScore: 0.12
+    tools:
+      order:
+        - web_search
+        - actions
+        - file_search
+        - ocr
+        - execute_code
+        - image_generation
+        - artifacts
+        - chain
+      web_search:
+        providerPriority:
+          - serper
+          - tavily
+          - traversaal
+        firecrawl: true
+        reranker:
+          enabled: true
+          providerPriority:
+            - jina
+          topN: 8
+        maxResults: 16
+      file_search:
+        enabled: true
+        minRelevanceScore: 0.12
+        k: 120
+        maxCitations: 50
+        maxCitationsPerFile: 10
+      ocr:
+        enabled: true
+      execute_code:
+        enabled: true
+      image_generation:
+        providers:
+          - openai_images
+          - dalle
+  azureOpenAI:
+    assistants: true
+    embeddings:
+      deploymentName: REPLACE_EMBEDDING_DEPLOYMENT
+      version: "2023-05-15"
+    groups:
+      - group: primary
+        baseURL: https://REPLACE_PRIMARY_INSTANCE.openai.azure.com/
+        apiKey: ${AZURE_API_KEY}
+        models:
+          gpt-5:
+            deploymentName: REPLACE_PRIMARY_GPT_5_DEPLOYMENT
+            version: 2025-04-01-preview
+          gpt-5-mini:
+            deploymentName: REPLACE_PRIMARY_GPT_5_MINI_DEPLOYMENT
+            version: 2025-04-01-preview
+          gpt-4o:
+            deploymentName: REPLACE_PRIMARY_GPT_4O_DEPLOYMENT
+            version: 2025-01-01-preview
+          gpt-4o-mini:
+            deploymentName: REPLACE_PRIMARY_GPT_4O_MINI_DEPLOYMENT
+            version: 2025-01-01-preview
+        instanceName: REPLACE_PRIMARY_INSTANCE
+      - group: secondary
+        baseURL: https://REPLACE_SECONDARY_INSTANCE.openai.azure.com/
+        apiKey: ${CUSTOM_AZURE2_API_KEY}
+        models:
+          gpt-5-secondary:
+            deploymentName: REPLACE_SECONDARY_GPT_5_DEPLOYMENT
+            version: 2025-04-01-preview
+          gpt-5-mini-secondary:
+            deploymentName: REPLACE_SECONDARY_GPT_5_MINI_DEPLOYMENT
+            version: 2025-04-01-preview
+          gpt-4o-secondary:
+            deploymentName: REPLACE_SECONDARY_GPT_4O_DEPLOYMENT
+            version: 2025-01-01-preview
+          gpt-4o-mini-secondary:
+            deploymentName: REPLACE_SECONDARY_GPT_4O_MINI_DEPLOYMENT
+            version: 2025-01-01-preview
+        instanceName: REPLACE_SECONDARY_INSTANCE
+  custom:
+    - name: AzureVision
+      apiKey: ${AZURE_VISION_EASTUS2_API_KEY}
+      baseURL: >-
+        https://REPLACE_VISION_RESOURCE.cognitiveservices.azure.com/computervision/imageanalysis:analyze?api-version=2024-02-01&features=read
+      directEndpoint: true
+      models:
+        default:
+          - vision-analyze
+      headers:
+        Ocp-Apim-Subscription-Key: ${AZURE_VISION_EASTUS2_API_KEY}
+    - name: AzureDocIntel
+      apiKey: ${AZURE_DOCINTEL_EASTUS2_API_KEY}
+      baseURL: >-
+        https://REPLACE_DOCINTEL_RESOURCE.cognitiveservices.azure.com/documentintelligence/documentModels/prebuilt-read:analyze?api-version=2024-02-29-preview
+      directEndpoint: true
+      models:
+        default:
+          - docintel-read
+      headers:
+        Ocp-Apim-Subscription-Key: ${AZURE_DOCINTEL_EASTUS2_API_KEY}
+    - name: JinaDeepSearch
+      apiKey: ${JINA_API_KEY}
+      baseURL: ${JINA_BASE_URL}
+      iconURL: https://jina.ai/favicon.ico
+      modelDisplayLabel: DeepSearch
+      models:
+        default:
+          - jina-deepsearch-v1
+        fetch: false
+      titleConvo: false
+      addParams:
+        stream: true
+      headers:
+        Authorization: Bearer ${JINA_API_KEY}
+        Content-Type: application/json
+modelSpecs:
+  enforce: true
+  prioritize: true
+  list:
+    - name: hero
+      label: Hero
+      default: true
+      description: The most comum agent for internal activities
+      showIconInMenu: true
+      showIconInHeader: true
+      preset:
+        endpoint: agents
+        agent_id: REPLACE_HERO_AGENT_ID
+    - name: hero-deep-research
+      label: Hero Deep Research
+      description: The most complex agent for research activities
+      showIconInMenu: true
+      showIconInHeader: true
+      preset:
+        endpoint: agents
+        agent_id: REPLACE_RESEARCH_AGENT_ID
+    - name: hero-prompt-trainer
+      label: Hero Prompt Trainer
+      description: Playground Agent for supporint on how to use Generative AI
+      showIconInMenu: true
+      showIconInHeader: true
+      preset:
+        endpoint: agents
+        agent_id: REPLACE_TRAINER_AGENT_ID
+fileConfig:
+  endpoints:
+    default:
+      fileLimit: 10
+      fileSizeLimit: 20
+      totalSizeLimit: 100
+      supportedMimeTypes:
+        - application/pdf
+        - application/vnd.openxmlformats-officedocument.wordprocessingml.document
+        - application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+        - application/vnd.openxmlformats-officedocument.presentationml.presentation
+        - text/csv
+        - text/plain
+        - application/json
+        - application/x-yaml
+        - text/yaml
+        - text/x-python
+        - application/javascript
+        - text/x-java-source
+        - text/html
+        - text/css
+        - image/png
+        - image/jpeg
+        - image/webp
+        - image/tiff
+        - image/.*
+        - audio/mpeg
+        - audio/wav
+        - audio/mp4
+  serverFileSizeLimit: 200
+  avatarSizeLimit: 2
+  imageGeneration:
+    px: 1024
+speech:
+  speechTab:
+    conversationMode: true
+    advancedMode: false
+    speechToText:
+      engineSTT: external
+      autoTranscribeAudio: true
+      decibelValue: -45
+      autoSendText: 0
+    textToSpeech:
+      engineTTS: external
+      voice: alloy
+      automaticPlayback: true
+      playbackRate: 1
+      cacheTTS: true
+  stt:
+    azureOpenAI:
+      instanceName: REPLACE_PRIMARY_INSTANCE
+      apiKey: ${AZURE_API_KEY}
+      deploymentName: REPLACE_STT_DEPLOYMENT
+      apiVersion: "2024-06-01"
+  tts:
+    azureOpenAI:
+      instanceName: REPLACE_PRIMARY_INSTANCE
+      apiKey: ${AZURE_API_KEY}
+      deploymentName: REPLACE_TTS_DEPLOYMENT
+      apiVersion: 2025-03-01-preview
+      model: tts-1
+      voices:
+        - alloy
+        - echo
+        - fable
+        - onyx
+        - nova
+        - shimmer

@@ -1,0 +1,81 @@
+name: Hero configuration and image validation
+
+on:
+  pull_request:
+    paths:
+      - 'custom/**'
+      - 'config/hero/**'
+      - 'api/server/services/Config/loadCustomConfig*'
+      - 'Dockerfile'
+      - 'docker-compose.yml'
+      - '.dockerignore'
+      - '.gitignore'
+      - '.gitleaks.toml'
+      - 'package*.json'
+      - '.github/workflows/hero-config.yml'
+  push:
+    branches: ['security/hero-private-runtime-config']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npm run build:data-provider
+      - run: npm run check:hero-public && npm run test:hero-config
+      - name: Secret scan of proposed commits (redacted)
+        env:
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+        run: |
+          curl --fail --silent --show-error --location \
+            https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz \
+            -o "$RUNNER_TEMP/gitleaks.tar.gz"
+          echo "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb  $RUNNER_TEMP/gitleaks.tar.gz" | sha256sum -c -
+          tar -xzf "$RUNNER_TEMP/gitleaks.tar.gz" -C "$RUNNER_TEMP" gitleaks
+          base="${PR_BASE:-$(git merge-base origin/main HEAD)}"
+          "$RUNNER_TEMP/gitleaks" git --no-banner --redact=100 --log-opts="$base..HEAD" .
+      - name: Validate Compose contract without starting services
+        env:
+          HERO_CONFIG_FILE: /tmp/hero-validation/config.yaml
+          HERO_ENV_FILE: /tmp/hero-validation/runtime.env
+        run: docker compose config --quiet
+      - name: Build image without corporate configuration or credentials
+        run: |
+          mkdir -p private uploads api/data logs
+          for file in .env custom/librechat.yaml private/config.yaml uploads/hero-canary api/data/hero-canary logs/hero-canary; do
+            echo 'hero-build-exclusion-canary' > "$file"
+          done
+          docker build --build-arg THEME_SHA=ci -t hero-config-validation:ci .
+      - name: Verify image and startup failure without private configuration
+        run: |
+          docker run --rm --entrypoint node hero-config-validation:ci config/hero/check-build.cjs --image
+          if docker run --rm hero-config-validation:ci true; then
+            echo "Image unexpectedly started without private configuration"
+            exit 1
+          fi
+      - name: Verify startup with a synthetic private configuration, without network
+        run: |
+          node config/hero/fixture.cjs "$RUNNER_TEMP/hero-smoke"
+          docker run --rm --network none \
+            --mount "type=bind,src=$RUNNER_TEMP/hero-smoke/config.yaml,dst=/run/secrets/hero-config.yaml,readonly" \
+            --mount "type=bind,src=$RUNNER_TEMP/hero-smoke/runtime.env,dst=/app/.env,readonly" \
+            hero-config-validation:ci true
+      - name: Test loader logging against built workspace packages
+        run: |
+          npm run build:data-schemas
+          npm run build:api
+          npm exec --workspace=api -- jest server/services/Config/loadCustomConfig.spec.js --runInBand --silent
+      # No registry login, push, deployment, live credentials or production services.

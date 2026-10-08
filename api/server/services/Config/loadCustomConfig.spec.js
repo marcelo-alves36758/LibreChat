@@ -163,7 +163,7 @@ describe('loadCustomConfig', () => {
     await loadCustomConfig();
   });
 
-  it('should log the loaded custom config', async () => {
+  it('should log successful loading without private configuration values, even at debug level', async () => {
     const mockConfig = {
       version: '1.0',
       cache: true,
@@ -180,9 +180,20 @@ describe('loadCustomConfig', () => {
     process.env.CONFIG_PATH = 'validConfig.yaml';
     loadYaml.mockReturnValueOnce(mockConfig);
     await loadCustomConfig();
-    expect(logger.info).toHaveBeenCalledWith('Custom config file loaded:');
-    expect(logger.info).toHaveBeenCalledWith(JSON.stringify(mockConfig, null, 2));
-    expect(logger.debug).toHaveBeenCalledWith('Custom config:', mockConfig);
+    expect(logger.info).toHaveBeenCalledWith('Custom config file loaded and validated.');
+    expect(logger.debug).not.toHaveBeenCalled();
+    expect(JSON.stringify(logger.info.mock.calls)).not.toContain('api.mistral.ai');
+  });
+
+  it('does not log parser excerpts containing private data', async () => {
+    jest.resetModules();
+    const loader = require('./loadCustomConfig');
+    const { loadYaml: readYaml } = require('@librechat/api');
+    const { logger: log } = require('@librechat/data-schemas');
+    readYaml.mockReturnValue({ reason: 'canary-private-data', stack: 'canary-private-data' });
+    await loader();
+    expect(log.error).toHaveBeenCalledWith('Config file YAML format is invalid.');
+    expect(JSON.stringify(log.error.mock.calls)).not.toContain('canary-private-data');
   });
 
   describe('parseCustomParams', () => {

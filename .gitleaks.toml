@@ -1,0 +1,17 @@
+title = "LibreChat / Hero secret and deployment metadata checks"
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "hero-azure-resource"
+description = "Azure resource address in public custom configuration"
+path = '''(^|/)custom/'''
+regex = '''https://[a-z0-9-]+\.(?:openai\.azure\.com|services\.ai\.azure\.com|cognitiveservices\.azure\.com)'''
+
+[[rules]]
+id = "hero-agent-id"
+description = "Concrete agent identifier in public custom configuration"
+path = '''(^|/)custom/'''
+regex = '''agent_id:\s*["']?(agent_[A-Za-z0-9_-]+)'''
+secretGroup = 1

@@ -18,6 +18,7 @@ services:
       # Essenciais para o proxy do Dokploy alcançar o app
       HOST: 0.0.0.0
       PORT: 3080
+      CONFIG_PATH: /run/secrets/hero-config.yaml
 
       # Artefacts/Sandpack internos do LibreChat
       SANDBOX: "true"
@@ -31,8 +32,19 @@ services:
       # SANDPACK_STATIC_BUNDLER_URL: ${SANDPACK_STATIC_BUNDLER_URL:-}
 
     volumes:
-      - ./.env:/app/.env
-      - ./custom/librechat.yaml:/app/config/librechat.yaml
+      # Arquivos privados fora do checkout/contexto de build. Sem fallback público.
+      - type: bind
+        source: ${HERO_ENV_FILE:?Defina HERO_ENV_FILE com o caminho absoluto do arquivo privado de ambiente}
+        target: /app/.env
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ${HERO_CONFIG_FILE:?Defina HERO_CONFIG_FILE com o caminho absoluto do YAML privado}
+        target: /run/secrets/hero-config.yaml
+        read_only: true
+        bind:
+          create_host_path: false
       - ./images:/app/client/public/images
       - ./uploads:/app/uploads
       - ./logs:/app/api/logs
